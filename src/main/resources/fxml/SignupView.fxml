@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.dp.notary.blockchain.ui.SignupController"
+      alignment="CENTER"
+      spacing="14"
+      stylesheets="@../css/auth.css"
+      styleClass="auth-root">
+
+    <ImageView fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true" />
+
+    <Label text="Notary Blockchain" styleClass="auth-title" />
+    <Label text="Create an account" styleClass="auth-subtitle" />
+
+    <VBox spacing="10" maxWidth="320">
+
+        <VBox>
+            <Label text="Provide your username:" styleClass="field-label" />
+            <TextField fx:id="usernameField" promptText="Username"/>
+        </VBox>
+
+        <VBox>
+            <Label text="Provide your password:" styleClass="field-label" />
+            <PasswordField fx:id="passwordField" promptText="Password"/>
+        </VBox>
+
+        <VBox>
+            <Label text="Confirm your password:" styleClass="field-label" />
+            <PasswordField fx:id="confirmField" promptText="Confirm password"/>
+        </VBox>
+
+    </VBox>
+
+    <Label fx:id="errorLabel" visible="false" styleClass="auth-error"/>
+
+    <Button text="Create account" onAction="#onCreateAccount" styleClass="button-wide"/>
+
+    <Hyperlink text="Back to login" onAction="#onBackToLogin"/>
+
+</VBox>

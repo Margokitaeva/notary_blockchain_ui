@@ -1,0 +1,41 @@
+/* Average settings for sign up log in */
+.auth-root {
+    -fx-padding: 32;
+}
+
+/* Header subheader */
+.auth-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: 700;
+}
+
+.auth-subtitle {
+    -fx-font-size: 12px;
+    -fx-opacity: 0.80;
+}
+
+/* text above info fields */
+.field-label {
+    -fx-font-size: 12px;
+    -fx-opacity: 0.80;
+}
+
+/* error */
+.auth-error {
+    -fx-font-size: 12px;
+    -fx-text-fill: #d32f2f;
+}
+
+/* buttons */
+.button-login {
+    -fx-pref-width: 110px;
+}
+
+.button-wide {
+    -fx-pref-width: 320px;
+}
+
+/* little text */
+.muted-label {
+    -fx-opacity: 0.75;
+}

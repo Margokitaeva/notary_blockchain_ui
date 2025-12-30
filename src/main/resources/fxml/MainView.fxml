@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            style="-fx-background-color: #101521;">
+
+    <top>
+        <Label text="Main (placeholder)"
+               style="-fx-padding: 12; -fx-text-fill: white; -fx-font-size: 16px;"/>
+    </top>
+
+    <center>
+        <Label text="After login we will show Dashboard here."
+               style="-fx-text-fill: #aab2c0; -fx-font-size: 13px;"/>
+    </center>
+
+</BorderPane>
