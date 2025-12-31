@@ -56,7 +56,7 @@ public class App extends Application {
 //        Scene scene = new Scene(root);
 
         // Optional css above
-        // scene.getStylesheets().add("/css/auth.css");
+//        scene.getStylesheets().add("/css/auth.css");
         showLogin();
         stage.setTitle("Notary Blockchain");
 //        stage.setScene(scene);
