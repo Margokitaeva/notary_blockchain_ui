@@ -1,3 +1,5 @@
 {
-  "DBFile": "jdbc:sqlite:DBFile"
+  "DBFile": "jdbc:sqlite:DBFile",
+  "TokenKey": "fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf",
+  "ValideTime": "600000"
 }
