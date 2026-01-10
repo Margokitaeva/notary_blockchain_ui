@@ -68,9 +68,9 @@
 
     <!-- CENTER CONTENT (EMPTY FOR NOW) -->
     <center>
-        <VBox styleClass="content">
+        <VBox fx:id="contentRoot" styleClass="content">
             <Label text="Content will be here"
-                   styleClass="hint"/>
+                   styleClass="hint"/> <!-- delete later when content added -->
         </VBox>
     </center>
 

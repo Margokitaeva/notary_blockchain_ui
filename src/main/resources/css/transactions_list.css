@@ -1,0 +1,42 @@
+.tx-root { -fx-padding: 14 18 18 18; }
+
+.tx-filterbar { -fx-padding: 2 0 2 0; }
+
+.tx-label { -fx-font-size: 12px; -fx-opacity: 0.80; }
+.tx-hint  { -fx-font-size: 11px; -fx-opacity: 0.75; }
+
+.tx-details {
+    -fx-padding: 14;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+
+.tx-card-title { -fx-font-size: 13px; -fx-font-weight: 700; }
+
+.tx-field-label { -fx-font-size: 11px; -fx-opacity: 0.75; }
+.tx-field-value { -fx-font-size: 12px; -fx-font-weight: 600; }
+
+.tx-filterbar {
+    -fx-padding: 2 0 4 0;
+}
+
+.tx-filter-title {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-opacity: 0.85;
+}
+
+.tx-filter-label {
+    -fx-font-size: 11px;
+    -fx-opacity: 0.75;
+}
+
+.tx-clear-btn {
+    -fx-min-width: 72px;
+}
+
+.tx-filter-label {
+    -fx-font-size: 11px;
+    -fx-opacity: 0.75;
+}

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.dp.notary.blockchain.ui.TransactionsListController"
+      spacing="10"
+      stylesheets="@../css/transactions_list.css"
+      styleClass="tx-root">
+
+    <!-- FILTER ROW (one line above the table) -->
+    <VBox spacing="6" styleClass="tx-filterbar">
+
+        <!-- FILTER TITLE -->
+        <Label text="Filter" styleClass="tx-filter-title"/>
+
+        <!-- FILTER FIELDS ROW -->
+        <HBox spacing="10" alignment="CENTER_LEFT">
+
+            <VBox spacing="2">
+                <Label text="Created by" styleClass="tx-filter-label"/>
+                <TextField fx:id="filterCreatedBy" prefWidth="160"/>
+            </VBox>
+
+            <VBox spacing="2">
+                <Label text="Initiator" styleClass="tx-filter-label"/>
+                <TextField fx:id="filterInitiator" prefWidth="160"/>
+            </VBox>
+
+            <VBox spacing="2">
+                <Label text="Target" styleClass="tx-filter-label"/>
+                <TextField fx:id="filterTarget" prefWidth="160"/>
+            </VBox>
+
+            <VBox spacing="2">
+                <Label text="Type" styleClass="tx-filter-label"/>
+                <ComboBox fx:id="filterType" prefWidth="150"/>
+            </VBox>
+
+            <!-- Status (only MY_SUBMITTED) -->
+            <VBox fx:id="statusFilterBox"
+                  spacing="2"
+                  visible="false"
+                  managed="false">
+                <Label text="Status" styleClass="tx-filter-label"/>
+                <ComboBox fx:id="filterStatus" prefWidth="150"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- CLEAR BUTTON aligned with fields -->
+            <VBox spacing="2">
+                <Label text=" " styleClass="tx-filter-label"/>
+
+                <Button text="Clear"
+                        onAction="#onClearFilters"
+                        styleClass="tx-clear-btn"
+                        prefHeight="32"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <Separator/>
+
+    <!-- TABLE + DETAILS -->
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+
+        <!-- TABLE -->
+        <TableView fx:id="table" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colTime" text="Time" prefWidth="140"/>
+                <TableColumn fx:id="colId" text="ID" prefWidth="80"/>
+
+                <!-- only visible in MY_SUBMITTED mode -->
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+
+                <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
+                <TableColumn fx:id="colCreatedBy" text="Created by" prefWidth="160"/>
+                <TableColumn fx:id="colInitiator" text="Initiator" prefWidth="160"/>
+                <TableColumn fx:id="colTarget" text="Target" prefWidth="160"/>
+                <TableColumn fx:id="colAmount" text="Amount" prefWidth="120"/>
+            </columns>
+        </TableView>
+
+        <!-- DETAILS -->
+        <VBox prefWidth="320" spacing="10" styleClass="tx-details">
+            <Label text="Details" styleClass="tx-card-title"/>
+            <Separator/>
+
+            <Label fx:id="detailsHint"
+                   text="Select a transaction from the table."
+                   styleClass="tx-hint"/>
+
+            <VBox spacing="8">
+                <Label text="ID" styleClass="tx-field-label"/>
+                <Label fx:id="detailsId" text="—" styleClass="tx-field-value"/>
+
+                <Label text="Time" styleClass="tx-field-label"/>
+                <Label fx:id="detailsTime" text="—" styleClass="tx-field-value"/>
+
+                <Label fx:id="detailsStatusLabel" text="Status" styleClass="tx-field-label"
+                       visible="false" managed="false"/>
+                <Label fx:id="detailsStatus" text="—" styleClass="tx-field-value"
+                       visible="false" managed="false"/>
+
+                <Label text="Type" styleClass="tx-field-label"/>
+                <Label fx:id="detailsType" text="—" styleClass="tx-field-value"/>
+
+                <Label text="Created by" styleClass="tx-field-label"/>
+                <Label fx:id="detailsCreatedBy" text="—" styleClass="tx-field-value"/>
+
+                <Label text="Initiator" styleClass="tx-field-label"/>
+                <Label fx:id="detailsInitiator" text="—" styleClass="tx-field-value"/>
+
+                <Label text="Target" styleClass="tx-field-label"/>
+                <Label fx:id="detailsTarget" text="—" styleClass="tx-field-value"/>
+
+                <Label text="Amount" styleClass="tx-field-label"/>
+                <Label fx:id="detailsAmount" text="—" styleClass="tx-field-value"/>
+            </VBox>
+
+            <Separator/>
+
+            <!-- ACTIONS -->
+            <VBox spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                    <Button fx:id="deleteBtn" text="Delete" onAction="#onDelete"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Button fx:id="editBtn" text="Edit" onAction="#onEdit"/>
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT">
+                    <Button fx:id="declineBtn" text="Decline" onAction="#onDecline"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Button fx:id="approveBtn" text="Approve" onAction="#onApprove"/>
+                </HBox>
+
+                <VBox fx:id="declineBox" spacing="6" visible="false" managed="false">
+                    <Label text="Enter decline comment:"/>
+                    <TextArea fx:id="declineCommentArea" prefRowCount="3"/>
+                    <Button text="OK" onAction="#onConfirmDecline"/>
+                </VBox>
+
+                <Button fx:id="resubmitBtn" text="Send again" onAction="#onResubmit"/>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </HBox>
+
+</VBox>

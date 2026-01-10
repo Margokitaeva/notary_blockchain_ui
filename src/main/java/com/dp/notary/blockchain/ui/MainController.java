@@ -1,9 +1,14 @@
 package com.dp.notary.blockchain.ui;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+
+import java.io.IOException;
+import java.util.function.Consumer;
 
 public class MainController {
 
@@ -53,7 +58,15 @@ public class MainController {
     @FXML
     private void onTransactions() {
         setPageTitle("Transactions");
-        clearContent();
+
+        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+            TransactionsListController c = (TransactionsListController) controller;
+            c.setMode(TransactionsListController.Mode.APPROVED);
+
+            // TODO: вместо демо — список из API:
+            // c.setItems(FXCollections.observableArrayList(api.getApprovedTransactions()));
+        });
+//        clearContent();
     }
 
     @FXML
@@ -65,19 +78,40 @@ public class MainController {
     @FXML
     private void onDrafts() {
         setPageTitle("Drafts");
-        clearContent();
+
+        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+            TransactionsListController c = (TransactionsListController) controller;
+            c.setMode(TransactionsListController.Mode.DRAFTS);
+
+            // TODO: c.setItems(FXCollections.observableArrayList(api.getDrafts()));
+        });
+//        clearContent();
     }
 
     @FXML
     private void onPending() {
         setPageTitle("Pending Transactions");
-        clearContent();
+
+        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+            TransactionsListController c = (TransactionsListController) controller;
+            c.setMode(TransactionsListController.Mode.PENDING);
+
+            // TODO: c.setItems(FXCollections.observableArrayList(api.getPending()));
+        });
+//        clearContent();
     }
 
     @FXML
     private void onSubmitted() {
         setPageTitle("My Submitted Transactions");
-        clearContent();
+
+        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+            TransactionsListController c = (TransactionsListController) controller;
+            c.setMode(TransactionsListController.Mode.MY_SUBMITTED);
+
+            // TODO: c.setItems(FXCollections.observableArrayList(api.getMySubmittedAndDeclined()));
+        });
+//        clearContent();
     }
 
     @FXML
@@ -91,6 +125,23 @@ public class MainController {
     private void clearContent() {
         if (contentRoot != null) {
             contentRoot.getChildren().clear();
+        }
+    }
+
+    private void loadIntoContent(String fxmlResourcePath, Consumer<Object> controllerInit) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlResourcePath));
+            Node root = loader.load();
+
+            Object controller = loader.getController();
+            if (controllerInit != null && controller != null) {
+                controllerInit.accept(controller);
+            }
+
+            contentRoot.getChildren().setAll(root);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load view: " + fxmlResourcePath, e);
         }
     }
 
