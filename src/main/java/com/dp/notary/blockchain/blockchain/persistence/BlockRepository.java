@@ -1,6 +1,7 @@
-package com.dp.notary.blockchain.persistence;
+package com.dp.notary.blockchain.blockchain.persistence;
 
-import com.dp.notary.blockchain.domain.Block;
+import com.dp.notary.blockchain.blockchain.model.Block;
+
 import java.util.List;
 import java.util.Optional;
 

@@ -1,4 +1,4 @@
-package com.dp.notary.blockchain.domain;
+package com.dp.notary.blockchain.blockchain.model;
 
 import java.time.Instant;
 import java.util.List;

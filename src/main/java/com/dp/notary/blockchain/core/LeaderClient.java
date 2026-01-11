@@ -1,9 +1,9 @@
 package com.dp.notary.blockchain.core;
 
+import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
-import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
-import com.dp.notary.blockchain.domain.Block;
+import com.dp.notary.blockchain.blockchain.model.Block;
 
 import java.util.List;
 

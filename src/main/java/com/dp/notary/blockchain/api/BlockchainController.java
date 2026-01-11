@@ -3,9 +3,14 @@ package com.dp.notary.blockchain.api;
 import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
+import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.core.BlockchainService;
-import com.dp.notary.blockchain.domain.Block;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -34,4 +39,3 @@ public class BlockchainController {
         return svc.submitAct(req);
     }
 }
-

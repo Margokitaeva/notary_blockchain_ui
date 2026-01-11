@@ -3,8 +3,8 @@ package com.dp.notary.blockchain.core;
 import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
+import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.config.NotaryProperties;
-import com.dp.notary.blockchain.domain.Block;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -47,4 +47,3 @@ public class HttpLeaderClient implements LeaderClient {
         return arr == null ? List.of() : List.of(arr);
     }
 }
-
