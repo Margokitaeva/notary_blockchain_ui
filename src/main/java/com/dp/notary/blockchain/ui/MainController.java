@@ -10,6 +10,9 @@ import javafx.scene.layout.VBox;
 import java.io.IOException;
 import java.util.function.Consumer;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 public class MainController {
 
     // ===== HEADER =====
@@ -24,6 +27,13 @@ public class MainController {
     // ===== CENTER PLACEHOLDER =====
     @FXML private VBox contentRoot;
 
+    // ===== SESSION (текущее состояние пользователя) =====
+    private String currentUserFullName = "Name Surname";
+    private Role currentRole = Role.LEADER;
+
+    // for cancel to return list, that was before
+    private TransactionsListController.Mode lastTxListMode = TransactionsListController.Mode.PENDING;
+
     // ===== INIT =====
     @FXML
     private void initialize() {
@@ -35,10 +45,12 @@ public class MainController {
     // ===== PUBLIC API (потом дергать из App/Auth) =====
 
     public void setUser(String fullName, Role role) {
+        this.currentUserFullName = fullName;
+        this.currentRole = role;
+
         userNameLabel.setText("User: " + fullName);
         roleLabel.setText("Role: " + role.displayName());
 
-        // показываем/скрываем пункты меню
         pendingBtn.setVisible(role == Role.LEADER);
         submittedBtn.setVisible(role == Role.REPLICA);
     }
@@ -59,32 +71,38 @@ public class MainController {
     private void onTransactions() {
         setPageTitle("Transactions");
 
-        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-            TransactionsListController c = (TransactionsListController) controller;
-            c.setMode(TransactionsListController.Mode.APPROVED);
+        openTransactions(TransactionsListController.Mode.APPROVED);
 
-            // TODO: вместо демо — список из API:
-            // c.setItems(FXCollections.observableArrayList(api.getApprovedTransactions()));
-        });
+//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+//            TransactionsListController c = (TransactionsListController) controller;
+//            c.setMode(TransactionsListController.Mode.APPROVED);
+//
+//            // TODO: вместо демо — список из API:
+//            // c.setItems(FXCollections.observableArrayList(api.getApprovedTransactions()));
+//        });
 //        clearContent();
     }
 
     @FXML
     private void onNewTransaction() {
-        setPageTitle("New Transaction");
-        clearContent();
+//        setPageTitle("New Transaction");
+
+        openCreateTransaction();
+//        clearContent();
     }
 
     @FXML
     private void onDrafts() {
         setPageTitle("Drafts");
 
-        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-            TransactionsListController c = (TransactionsListController) controller;
-            c.setMode(TransactionsListController.Mode.DRAFTS);
+        openTransactions(TransactionsListController.Mode.DRAFTS);
 
-            // TODO: c.setItems(FXCollections.observableArrayList(api.getDrafts()));
-        });
+//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+//            TransactionsListController c = (TransactionsListController) controller;
+//            c.setMode(TransactionsListController.Mode.DRAFTS);
+//
+//            // TODO: c.setItems(FXCollections.observableArrayList(api.getDrafts()));
+//        });
 //        clearContent();
     }
 
@@ -92,12 +110,14 @@ public class MainController {
     private void onPending() {
         setPageTitle("Pending Transactions");
 
-        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-            TransactionsListController c = (TransactionsListController) controller;
-            c.setMode(TransactionsListController.Mode.PENDING);
+        openTransactions(TransactionsListController.Mode.PENDING);
 
-            // TODO: c.setItems(FXCollections.observableArrayList(api.getPending()));
-        });
+//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+//            TransactionsListController c = (TransactionsListController) controller;
+//            c.setMode(TransactionsListController.Mode.PENDING);
+//
+//            // TODO: c.setItems(FXCollections.observableArrayList(api.getPending()));
+//        });
 //        clearContent();
     }
 
@@ -105,12 +125,14 @@ public class MainController {
     private void onSubmitted() {
         setPageTitle("My Submitted Transactions");
 
-        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-            TransactionsListController c = (TransactionsListController) controller;
-            c.setMode(TransactionsListController.Mode.MY_SUBMITTED);
+        openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
 
-            // TODO: c.setItems(FXCollections.observableArrayList(api.getMySubmittedAndDeclined()));
-        });
+//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+//            TransactionsListController c = (TransactionsListController) controller;
+//            c.setMode(TransactionsListController.Mode.MY_SUBMITTED);
+//
+//            // TODO: c.setItems(FXCollections.observableArrayList(api.getMySubmittedAndDeclined()));
+//        });
 //        clearContent();
     }
 
@@ -143,6 +165,150 @@ public class MainController {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load view: " + fxmlResourcePath, e);
         }
+    }
+
+    private void openCreateTransaction() {
+        setPageTitle("New Transaction");
+
+        loadIntoContent("/fxml/TransactionFormView.fxml", controller -> {
+            TransactionFormController f = (TransactionFormController) controller;
+
+            f.setMode(TransactionFormController.FormMode.CREATE);
+            f.setRole(currentRole);
+            f.setCurrentUser(currentUserFullName);
+
+            f.setActions(new TransactionFormController.Actions() {
+                @Override
+                public void onCancel() {
+                    // ничего не сохраняем — просто вернуться назад
+                    openTransactions(lastTxListMode);
+                }
+
+                @Override
+                public void onSaveDraft(TransactionFormController.TransactionPayload data) {
+                    // TODO: api.saveDraft(data)
+                    openTransactions(TransactionsListController.Mode.DRAFTS);
+                }
+
+                @Override
+                public void onSubmit(TransactionFormController.TransactionPayload data, boolean approveImmediately) {
+                    // TODO: api.submit(data, approveImmediately)
+                    openTransactions(TransactionsListController.Mode.PENDING);
+                }
+            });
+        });
+    }
+
+
+    private void openTransactions(TransactionsListController.Mode mode) {
+        lastTxListMode = mode;
+
+        setPageTitle(
+                switch (mode) {
+                    case PENDING -> "Pending";
+                    case DRAFTS -> "Drafts";
+                    case MY_SUBMITTED -> "My submitted";
+                    default -> "Dashboard";
+                }
+        );
+
+        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
+            TransactionsListController c = (TransactionsListController) controller;
+            c.setMode(mode);
+
+            c.setActions(new TransactionsListController.Actions() {
+                @Override
+                public void onEdit(TransactionsListController.TransactionRowVM tx) {
+                    openEditTransaction(tx);
+                }
+
+                @Override
+                public void onDelete(TransactionsListController.TransactionRowVM tx) {
+                    // TODO: api.delete(tx.id())
+                    openTransactions(mode);
+                }
+
+                @Override
+                public void onApprove(TransactionsListController.TransactionRowVM tx) {
+                    // TODO: api.approve(tx.id())
+                    openTransactions(mode);
+                }
+
+                @Override
+                public void onDecline(TransactionsListController.TransactionRowVM tx) {
+                    // TODO: api.decline(tx.id())
+                    openTransactions(mode);
+                }
+
+                @Override
+                public void onResubmit(TransactionsListController.TransactionRowVM tx) {
+                    // TODO: api.resubmit(tx.id())
+                    openTransactions(mode);
+                }
+            });
+
+            // TODO: c.setItems(... загрузка данных под mode ...)
+        });
+    }
+
+    private void openEditTransaction(TransactionsListController.TransactionRowVM tx) {
+        setPageTitle("Edit transaction #" + tx.id());
+
+        loadIntoContent("/fxml/TransactionFormView.fxml", controller -> {
+            TransactionFormController f = (TransactionFormController) controller;
+
+            f.setMode(TransactionFormController.FormMode.EDIT);
+            f.setRole(currentRole);
+            f.setCurrentUser(currentUserFullName);
+
+            // ВАЖНО:
+            // Сейчас твой TransactionFormController ожидает СВОЙ TransactionVM record.
+            // Самый простой путь — сделать маппинг:
+            TransactionFormController.TransactionFormVM vm =
+                    new TransactionFormController.TransactionFormVM(
+                            tx.id(),
+                            LocalDateTime.ofInstant(tx.timestamp(), ZoneId.systemDefault()),
+                            TransactionFormController.TransactionType.valueOf(tx.type().name()),
+                            tx.createdBy(),
+                            tx.initiator(),
+                            tx.target(),
+                            (int) Math.round(tx.amount())
+                    );
+
+            f.setTransaction(vm);
+
+            f.setActions(new TransactionFormController.Actions() {
+                @Override
+                public void onCancel() {
+                    openTransactions(lastTxListMode);
+                }
+
+                @Override
+                public void onSaveDraft(TransactionFormController.TransactionPayload data) {
+                    // timestamp в data уже будет NOW (как ты хотела)
+                    // TODO: api.updateDraftOrSaveDraft(data)
+                    openTransactions(TransactionsListController.Mode.DRAFTS);
+                }
+
+                @Override
+                public void onSubmit(TransactionFormController.TransactionPayload data, boolean approveImmediately) {
+                    // TODO: api.updateAndSubmit(data, approveImmediately)
+//                  // TODO: тут реальный вызов API
+                    //    // если approveImmediately=true -> submit+approve
+                    //    // иначе -> submit в pending
+                    //
+                    if (approveImmediately) {
+                        // лидер: сразу approved (или куда ты показываешь approved)
+                        openTransactions(TransactionsListController.Mode.APPROVED);
+                        // или другой режим/вкладка если у тебя есть "Approved"
+                    } else {
+                        // реплика: уходит на ожидание
+                        openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
+                    }
+//                    openTransactions(TransactionsListController.Mode.PENDING);
+                }
+            });
+        });
     }
 
     // ===== ROLE ENUM =====

@@ -141,11 +141,11 @@
                     <Button fx:id="approveBtn" text="Approve" onAction="#onApprove"/>
                 </HBox>
 
-                <VBox fx:id="declineBox" spacing="6" visible="false" managed="false">
-                    <Label text="Enter decline comment:"/>
-                    <TextArea fx:id="declineCommentArea" prefRowCount="3"/>
-                    <Button text="OK" onAction="#onConfirmDecline"/>
-                </VBox>
+<!--                <VBox fx:id="declineBox" spacing="6" visible="false" managed="false">-->
+<!--                    <Label text="Enter decline comment:"/>-->
+<!--                    <TextArea fx:id="declineCommentArea" prefRowCount="3"/>-->
+<!--                    <Button text="OK" onAction="#onConfirmDecline"/>-->
+<!--                </VBox>-->
 
                 <Button fx:id="resubmitBtn" text="Send again" onAction="#onResubmit"/>
             </VBox>

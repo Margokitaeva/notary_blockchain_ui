@@ -30,16 +30,16 @@ public class TransactionsListController {
     @FXML private ComboBox<StatusFilterItem> filterStatus; // visible only in MY_SUBMITTED
 
     // ===== TABLE =====
-    @FXML private TableView<TransactionVM> table;
+    @FXML private TableView<TransactionRowVM> table;
 
-    @FXML private TableColumn<TransactionVM, String> colTime;
-    @FXML private TableColumn<TransactionVM, String> colId;
-    @FXML private TableColumn<TransactionVM, String> colStatus; // only MY_SUBMITTED
-    @FXML private TableColumn<TransactionVM, String> colType;
-    @FXML private TableColumn<TransactionVM, String> colCreatedBy;
-    @FXML private TableColumn<TransactionVM, String> colInitiator;
-    @FXML private TableColumn<TransactionVM, String> colTarget;
-    @FXML private TableColumn<TransactionVM, Number> colAmount;
+    @FXML private TableColumn<TransactionRowVM, String> colTime;
+    @FXML private TableColumn<TransactionRowVM, String> colId;
+    @FXML private TableColumn<TransactionRowVM, String> colStatus; // only MY_SUBMITTED
+    @FXML private TableColumn<TransactionRowVM, String> colType;
+    @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
+    @FXML private TableColumn<TransactionRowVM, String> colInitiator;
+    @FXML private TableColumn<TransactionRowVM, String> colTarget;
+    @FXML private TableColumn<TransactionRowVM, Number> colAmount;
 
     // ===== DETAILS =====
     @FXML private Label detailsHint;
@@ -63,25 +63,26 @@ public class TransactionsListController {
     @FXML private Button approveBtn;
     @FXML private Button declineBtn;
 
-    @FXML private VBox declineBox;
-    @FXML private TextArea declineCommentArea;
+//    @FXML private VBox declineBox;
+//    @FXML private TextArea declineCommentArea;
 
     @FXML private Button resubmitBtn;
 
     // ===== DATA PIPELINE =====
-    private final ObservableList<TransactionVM> master = FXCollections.observableArrayList();
-    private FilteredList<TransactionVM> filtered;
-    private SortedList<TransactionVM> sorted;
+    // observableList - notifies if there are changes
+    private final ObservableList<TransactionRowVM> master = FXCollections.observableArrayList();
+    private FilteredList<TransactionRowVM> filtered;
+    private SortedList<TransactionRowVM> sorted;
 
     // ===== MODE / CALLBACKS =====
     private Mode mode = Mode.APPROVED;
 
     private Actions actions = new Actions() {
-        @Override public void onEdit(TransactionVM tx) { System.out.println("Edit: " + tx.id()); }
-        @Override public void onDelete(TransactionVM tx) { System.out.println("Delete: " + tx.id()); }
-        @Override public void onApprove(TransactionVM tx) { System.out.println("Approve: " + tx.id()); }
-        @Override public void onDecline(TransactionVM tx, String comment) { System.out.println("Decline: " + tx.id() + " comment=" + comment); }
-        @Override public void onResubmit(TransactionVM tx) { System.out.println("Resubmit: " + tx.id()); }
+        @Override public void onEdit(TransactionRowVM tx) { System.out.println("Edit: " + tx.id()); }
+        @Override public void onDelete(TransactionRowVM tx) { System.out.println("Delete: " + tx.id()); }
+        @Override public void onApprove(TransactionRowVM tx) { System.out.println("Approve: " + tx.id()); }
+        @Override public void onDecline(TransactionRowVM tx) { System.out.println("Decline: " + tx.id()); }
+        @Override public void onResubmit(TransactionRowVM tx) { System.out.println("Resubmit: " + tx.id()); }
     };
 
     private static final DateTimeFormatter TIME_FMT =
@@ -91,7 +92,7 @@ public class TransactionsListController {
 
     // ================== PUBLIC API ==================
 
-    public void setItems(ObservableList<TransactionVM> items) {
+    public void setItems(ObservableList<TransactionRowVM> items) {
         master.setAll(items);
     }
 
@@ -123,11 +124,11 @@ public class TransactionsListController {
         // demo data (можешь убрать, когда подключишь API)
         if (master.isEmpty()) {
             master.addAll(
-                    TransactionVM.demo("T-001", Instant.now().minusSeconds(900), TxStatus.SUBMITTED, TransactionType.PURCHASE,
+                    TransactionRowVM.demo("T-001", Instant.now().minusSeconds(900), TxStatus.SUBMITTED, TransactionType.PURCHASE,
                             "Alice Leader", "John", "Kate", 120.0),
-                    TransactionVM.demo("T-002", Instant.now().minusSeconds(700), TxStatus.DECLINED, TransactionType.GRANT,
+                    TransactionRowVM.demo("T-002", Instant.now().minusSeconds(700), TxStatus.DECLINED, TransactionType.GRANT,
                             "Bob Replica", "Kate", "John", 50.0),
-                    TransactionVM.demo("T-003", Instant.now().minusSeconds(500), TxStatus.SUBMITTED, TransactionType.DIVIDEND,
+                    TransactionRowVM.demo("T-003", Instant.now().minusSeconds(500), TxStatus.SUBMITTED, TransactionType.DIVIDEND,
                             "Alice Leader", "Company", "Owners", 999.0)
             );
         }
@@ -200,7 +201,7 @@ public class TransactionsListController {
         table.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
             updateDetails(n);
             refreshActions();
-            hideDeclineBox();
+//            hideDeclineBox();
         });
     }
 
@@ -210,13 +211,13 @@ public class TransactionsListController {
         filtered.setPredicate(this::passesFilters);
         refreshActions();
         // если выбранный элемент отфильтровался — сбросим детали
-        TransactionVM sel = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM sel = table.getSelectionModel().getSelectedItem();
         if (sel == null || !filtered.contains(sel)) {
             resetDetails();
         }
     }
 
-    private boolean passesFilters(TransactionVM tx) {
+    private boolean passesFilters(TransactionRowVM tx) {
         // Type (enum) filter
         TypeFilterItem tf = filterType.getValue();
         if (tf != null && tf.type() != null) {
@@ -265,7 +266,7 @@ public class TransactionsListController {
         detailsAmount.setText("—");
     }
 
-    private void updateDetails(TransactionVM tx) {
+    private void updateDetails(TransactionRowVM tx) {
         if (tx == null) {
             resetDetails();
             return;
@@ -306,11 +307,11 @@ public class TransactionsListController {
         detailsStatus.setManaged(showStatusUI);
 
         // Also hide decline box when switching mode
-        hideDeclineBox();
+//        hideDeclineBox();
     }
 
     private void refreshActions() {
-        TransactionVM selected = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM selected = table.getSelectionModel().getSelectedItem();
 
         // hide all by default
         hide(editBtn);
@@ -318,7 +319,7 @@ public class TransactionsListController {
         hide(approveBtn);
         hide(declineBtn);
         hide(resubmitBtn);
-        hideDeclineBox();
+//        hideDeclineBox();
 
         if (selected == null) return;
 
@@ -348,57 +349,61 @@ public class TransactionsListController {
 
     @FXML
     private void onEdit() {
-        TransactionVM tx = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         actions.onEdit(tx);
     }
 
     @FXML
     private void onDelete() {
-        TransactionVM tx = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         actions.onDelete(tx);
     }
 
     @FXML
     private void onApprove() {
-        TransactionVM tx = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         actions.onApprove(tx);
     }
 
     @FXML
     private void onDecline() {
-        if (table.getSelectionModel().getSelectedItem() == null) return;
-        declineBox.setVisible(true);
-        declineBox.setManaged(true);
-        declineCommentArea.requestFocus();
-    }
-
-    @FXML
-    private void onConfirmDecline() {
-        TransactionVM tx = table.getSelectionModel().getSelectedItem();
+//        if (table.getSelectionModel().getSelectedItem() == null) return;
+//        declineBox.setVisible(true);
+//        declineBox.setManaged(true);
+//        declineCommentArea.requestFocus();
+        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
 
-        String comment = declineCommentArea.getText() == null ? "" : declineCommentArea.getText().trim();
-        actions.onDecline(tx, comment);
-
-        declineCommentArea.clear();
-        hideDeclineBox();
+        actions.onDecline(tx);
     }
+
+//    @FXML
+//    private void onConfirmDecline() {
+//        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
+//        if (tx == null) return;
+//
+//        String comment = declineCommentArea.getText() == null ? "" : declineCommentArea.getText().trim();
+//        actions.onDecline(tx, comment);
+//
+//        declineCommentArea.clear();
+//        hideDeclineBox();
+//    }
 
     @FXML
     private void onResubmit() {
-        TransactionVM tx = table.getSelectionModel().getSelectedItem();
+        TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         actions.onResubmit(tx);
     }
 
-    private void hideDeclineBox() {
-        declineBox.setVisible(false);
-        declineBox.setManaged(false);
-        declineCommentArea.clear();
-    }
+//    private void hideDeclineBox() {
+//        declineBox.setVisible(false);
+//        declineBox.setManaged(false);
+//        declineCommentArea.clear();
+//    }
 
     // ================== UTILS ==================
 
@@ -454,14 +459,14 @@ public class TransactionsListController {
     }
 
     public interface Actions {
-        void onEdit(TransactionVM tx);
-        void onDelete(TransactionVM tx);
-        void onApprove(TransactionVM tx);
-        void onDecline(TransactionVM tx, String comment);
-        void onResubmit(TransactionVM tx);
+        void onEdit(TransactionRowVM tx);
+        void onDelete(TransactionRowVM tx);
+        void onApprove(TransactionRowVM tx);
+        void onDecline(TransactionRowVM tx);
+        void onResubmit(TransactionRowVM tx);
     }
 
-    public static final class TransactionVM {
+    public static final class  TransactionRowVM {
         private final SimpleStringProperty id = new SimpleStringProperty();
         private final SimpleLongProperty timestampEpoch = new SimpleLongProperty();
 
@@ -474,7 +479,7 @@ public class TransactionsListController {
 
         private final SimpleDoubleProperty amount = new SimpleDoubleProperty();
 
-        public TransactionVM(String id,
+        public TransactionRowVM(String id,
                              Instant timestamp,
                              TxStatus status,
                              TransactionType type,
@@ -504,9 +509,9 @@ public class TransactionsListController {
         // for PropertyValueFactory("amount")
         public double getAmount() { return amount.get(); }
 
-        public static TransactionVM demo(String id, Instant ts, TxStatus st, TransactionType tp,
+        public static TransactionRowVM demo(String id, Instant ts, TxStatus st, TransactionType tp,
                                          String createdBy, String initiator, String target, double amount) {
-            return new TransactionVM(id, ts, st, tp, createdBy, initiator, target, amount);
+            return new TransactionRowVM(id, ts, st, tp, createdBy, initiator, target, amount);
         }
     }
 }
