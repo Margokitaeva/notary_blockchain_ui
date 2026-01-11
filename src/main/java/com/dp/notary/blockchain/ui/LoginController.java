@@ -35,7 +35,7 @@ public class LoginController {
 
         // TODO: тут будет запрос к backend / проверка роли Leader/Follower
         String token = authService.login(u, p);
-        if(token.isEmpty()) {
+        if(token == null) {
             errorLabel.setText("Invalid username or password.");
             errorLabel.setVisible(true);
         }
