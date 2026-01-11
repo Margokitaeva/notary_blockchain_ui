@@ -1,144 +1,152 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.dp.notary.blockchain.ui.TransactionsListController"
-      spacing="10"
-      stylesheets="@../css/transactions_list.css"
-      styleClass="tx-root">
+<VBox spacing="10" styleClass="tx-root" stylesheets="@../css/transactions_list.css" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.dp.notary.blockchain.ui.TransactionsListController">
 
     <!-- FILTER ROW (one line above the table) -->
     <VBox spacing="6" styleClass="tx-filterbar">
 
         <!-- FILTER TITLE -->
-        <Label text="Filter" styleClass="tx-filter-title"/>
+        <Label styleClass="tx-filter-title" text="Filter" />
 
         <!-- FILTER FIELDS ROW -->
-        <HBox spacing="10" alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" spacing="10">
 
             <VBox spacing="2">
-                <Label text="Created by" styleClass="tx-filter-label"/>
-                <TextField fx:id="filterCreatedBy" prefWidth="160"/>
+                <Label styleClass="tx-filter-label" text="Created by" />
+                <TextField fx:id="filterCreatedBy" prefWidth="160" />
             </VBox>
 
             <VBox spacing="2">
-                <Label text="Initiator" styleClass="tx-filter-label"/>
-                <TextField fx:id="filterInitiator" prefWidth="160"/>
+                <Label styleClass="tx-filter-label" text="Initiator" />
+                <TextField fx:id="filterInitiator" prefWidth="160" />
             </VBox>
 
             <VBox spacing="2">
-                <Label text="Target" styleClass="tx-filter-label"/>
-                <TextField fx:id="filterTarget" prefWidth="160"/>
+                <Label styleClass="tx-filter-label" text="Target" />
+                <TextField fx:id="filterTarget" prefWidth="160" />
             </VBox>
 
             <VBox spacing="2">
-                <Label text="Type" styleClass="tx-filter-label"/>
-                <ComboBox fx:id="filterType" prefWidth="150"/>
+                <Label styleClass="tx-filter-label" text="Type" />
+                <ComboBox fx:id="filterType" prefWidth="150" />
             </VBox>
 
             <!-- Status (only MY_SUBMITTED) -->
-            <VBox fx:id="statusFilterBox"
-                  spacing="2"
-                  visible="false"
-                  managed="false">
-                <Label text="Status" styleClass="tx-filter-label"/>
-                <ComboBox fx:id="filterStatus" prefWidth="150"/>
+            <VBox fx:id="statusFilterBox" managed="false" spacing="2" visible="false">
+                <Label styleClass="tx-filter-label" text="Status" />
+                <ComboBox fx:id="filterStatus" prefWidth="150" />
             </VBox>
-
-            <Region HBox.hgrow="ALWAYS"/>
 
             <!-- CLEAR BUTTON aligned with fields -->
             <VBox spacing="2">
-                <Label text=" " styleClass="tx-filter-label"/>
+                <Label styleClass="tx-filter-label" text=" " />
 
-                <Button text="Clear"
-                        onAction="#onClearFilters"
-                        styleClass="tx-clear-btn"
-                        prefHeight="32"/>
+                <Button onAction="#onClearFilters" prefHeight="25.0" prefWidth="72.0" styleClass="tx-clear-btn" text="Clear" />
             </VBox>
         </HBox>
     </VBox>
 
-    <Separator/>
+    <Separator />
 
     <!-- TABLE + DETAILS -->
     <HBox spacing="14" VBox.vgrow="ALWAYS">
 
-        <!-- TABLE -->
-        <TableView fx:id="table" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="colTime" text="Time" prefWidth="140"/>
-                <TableColumn fx:id="colId" text="ID" prefWidth="80"/>
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
 
-                <!-- only visible in MY_SUBMITTED mode -->
-                <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+<!--            <HBox fx:id="paginationBox" alignment="BOTTOM_RIGHT" spacing="6" padding="10">-->
+<!--                <Label text="here" />-->
+<!--            </HBox>-->
 
-                <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
-                <TableColumn fx:id="colCreatedBy" text="Created by" prefWidth="160"/>
-                <TableColumn fx:id="colInitiator" text="Initiator" prefWidth="160"/>
-                <TableColumn fx:id="colTarget" text="Target" prefWidth="160"/>
-                <TableColumn fx:id="colAmount" text="Amount" prefWidth="120"/>
-            </columns>
-        </TableView>
+            <HBox fx:id="paginationTop" alignment="CENTER_RIGHT" spacing="6">
+                <Label text="here" />
+            </HBox>
+
+            <!-- TABLE -->
+            <TableView fx:id="table" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colTime" prefWidth="140" text="Time" />
+                    <TableColumn fx:id="colId" prefWidth="80" text="ID" />
+
+                    <!-- only visible in MY_SUBMITTED mode -->
+                    <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />
+
+                    <TableColumn fx:id="colType" prefWidth="120" text="Type" />
+                    <TableColumn fx:id="colCreatedBy" prefWidth="160" text="Created by" />
+                    <TableColumn fx:id="colInitiator" prefWidth="160" text="Initiator" />
+                    <TableColumn fx:id="colTarget" prefWidth="160" text="Target" />
+                    <TableColumn fx:id="colAmount" prefWidth="120" text="Amount" />
+                </columns>
+            </TableView>
+
+            <HBox fx:id="paginationBottom" alignment="BOTTOM_RIGHT" spacing="6">
+                <Label text="here" />
+            </HBox>
+        </VBox>
+
+
 
         <!-- DETAILS -->
         <VBox prefWidth="320" spacing="10" styleClass="tx-details">
-            <Label text="Details" styleClass="tx-card-title"/>
-            <Separator/>
+            <Label styleClass="tx-card-title" text="Details" />
+            <Separator />
 
-            <Label fx:id="detailsHint"
-                   text="Select a transaction from the table."
-                   styleClass="tx-hint"/>
+            <Label fx:id="detailsHint" styleClass="tx-hint" text="Select a transaction from the table." />
 
             <VBox spacing="8">
-                <Label text="ID" styleClass="tx-field-label"/>
-                <Label fx:id="detailsId" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="ID" />
+                <Label fx:id="detailsId" styleClass="tx-field-value" text="—" />
 
-                <Label text="Time" styleClass="tx-field-label"/>
-                <Label fx:id="detailsTime" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Time" />
+                <Label fx:id="detailsTime" styleClass="tx-field-value" text="—" />
 
-                <Label fx:id="detailsStatusLabel" text="Status" styleClass="tx-field-label"
-                       visible="false" managed="false"/>
-                <Label fx:id="detailsStatus" text="—" styleClass="tx-field-value"
-                       visible="false" managed="false"/>
+                <Label fx:id="detailsStatusLabel" managed="false" styleClass="tx-field-label" text="Status" visible="false" />
+                <Label fx:id="detailsStatus" managed="false" styleClass="tx-field-value" text="—" visible="false" />
 
-                <Label text="Type" styleClass="tx-field-label"/>
-                <Label fx:id="detailsType" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Type" />
+                <Label fx:id="detailsType" styleClass="tx-field-value" text="—" />
 
-                <Label text="Created by" styleClass="tx-field-label"/>
-                <Label fx:id="detailsCreatedBy" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Created by" />
+                <Label fx:id="detailsCreatedBy" styleClass="tx-field-value" text="—" />
 
-                <Label text="Initiator" styleClass="tx-field-label"/>
-                <Label fx:id="detailsInitiator" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Initiator" />
+                <Label fx:id="detailsInitiator" styleClass="tx-field-value" text="—" />
 
-                <Label text="Target" styleClass="tx-field-label"/>
-                <Label fx:id="detailsTarget" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Target" />
+                <Label fx:id="detailsTarget" styleClass="tx-field-value" text="—" />
 
-                <Label text="Amount" styleClass="tx-field-label"/>
-                <Label fx:id="detailsAmount" text="—" styleClass="tx-field-value"/>
+                <Label styleClass="tx-field-label" text="Amount" />
+                <Label fx:id="detailsAmount" styleClass="tx-field-value" text="—" />
             </VBox>
 
-            <Separator/>
+            <Separator />
 
             <!-- ACTIONS -->
             <VBox spacing="8">
                 <HBox alignment="CENTER_LEFT">
-                    <Button fx:id="deleteBtn" text="Delete" onAction="#onDelete"/>
+                    <Button fx:id="deleteBtn" onAction="#onDelete" text="Delete" />
 
-                    <Region HBox.hgrow="ALWAYS"/>
+                    <Region HBox.hgrow="ALWAYS" />
 
-                    <Button fx:id="editBtn" text="Edit" onAction="#onEdit"/>
+                    <Button fx:id="editBtn" onAction="#onEdit" text="Edit" />
                 </HBox>
 
                 <HBox alignment="CENTER_LEFT">
-                    <Button fx:id="declineBtn" text="Decline" onAction="#onDecline"/>
+                    <Button fx:id="declineBtn" onAction="#onDecline" text="Decline" />
 
-                    <Region HBox.hgrow="ALWAYS"/>
+                    <Region HBox.hgrow="ALWAYS" />
 
-                    <Button fx:id="approveBtn" text="Approve" onAction="#onApprove"/>
+                    <Button fx:id="approveBtn" onAction="#onApprove" text="Approve" />
                 </HBox>
 
 <!--                <VBox fx:id="declineBox" spacing="6" visible="false" managed="false">-->
@@ -147,10 +155,10 @@
 <!--                    <Button text="OK" onAction="#onConfirmDecline"/>-->
 <!--                </VBox>-->
 
-                <Button fx:id="resubmitBtn" text="Send again" onAction="#onResubmit"/>
+                <Button fx:id="resubmitBtn" onAction="#onResubmit" text="Send again" />
             </VBox>
 
-            <Region VBox.vgrow="ALWAYS"/>
+            <Region VBox.vgrow="ALWAYS" />
         </VBox>
     </HBox>
 

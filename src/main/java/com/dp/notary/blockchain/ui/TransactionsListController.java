@@ -10,6 +10,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.time.Instant;
@@ -41,6 +42,12 @@ public class TransactionsListController {
     @FXML private TableColumn<TransactionRowVM, String> colTarget;
     @FXML private TableColumn<TransactionRowVM, Number> colAmount;
 
+    @FXML
+    private HBox paginationTop;
+
+    @FXML
+    private HBox paginationBottom;
+
     // ===== DETAILS =====
     @FXML private Label detailsHint;
 
@@ -67,6 +74,14 @@ public class TransactionsListController {
 //    @FXML private TextArea declineCommentArea;
 
     @FXML private Button resubmitBtn;
+
+    // TODO: move to config if needed
+    private static final int PAGE_SIZE = 15;
+    private static final int TX_PER_BLOCK = 5;
+    private static final int BLOCKS_PER_PAGE = PAGE_SIZE / TX_PER_BLOCK; // = 3
+
+    private int currentPage = 0;
+    private final ObservableList<TransactionRowVM> pageTransactions = FXCollections.observableArrayList();
 
     // ===== DATA PIPELINE =====
     // observableList - notifies if there are changes
@@ -132,6 +147,9 @@ public class TransactionsListController {
                             "Alice Leader", "Company", "Owners", 999.0)
             );
         }
+
+//        loadTransactionsFromBlocks();
+        loadPage(0);
     }
 
     private void setupColumns() {
@@ -428,6 +446,115 @@ public class TransactionsListController {
         c.setManaged(false);
         c.setDisable(true);
     }
+
+    // ================== PAGINATION ==================
+
+    private void loadPage(int page) {
+        int fromBlock = page * BLOCKS_PER_PAGE;
+        int blockCount = BLOCKS_PER_PAGE;
+
+        // TODO: get blockCount number of blocks (instead of fetchBlocksFromServer), use this.Mode
+
+        // mode APPROVED = transaction status APPROVED
+        // mode DRAFTS = transaction status DRAFT for current user - i guess you dont have it in this file do you need to add ??
+        // mode PENDING = transaction status SUBMITTED any user
+        // mode MY_SUBMITTED = transaction status SUBMITTED (same as above) DECLINED for current user - i guess you dont have it in this file do you need to add ??
+
+//        List<Block> blocks = fetchBlocksFromServer(fromBlock, blockCount);
+
+//        pageTransactions.clear();
+//
+//        for (Block block : blocks) {
+//            for (Transaction tx : block.getTransactions()) {
+//                pageTransactions.add(new TransactionVM(tx));
+//            }
+//        }
+
+        currentPage = page;
+        updateTable();
+        updatePagination();
+    }
+
+    private int getPageCount() {
+        // TODO: get number of blocks here
+        // number of pages = number of blocks * 5 / PAGE_SIZE
+        // если есть у Кати переменная,в  которой написано сколько транзакций в блоке, то можно вместо 5 вписать эту переменную
+        // либо если мы планируем сделать много транзакций в блоке потом то тогда надо делать пересчет чтобы одномоментно было 15-20 транзакций отображено
+        int totalBlocks = 30; // заглушка
+        return (int) Math.ceil((double) totalBlocks / BLOCKS_PER_PAGE);
+    }
+
+    private void updateTable() {
+        table.setItems(pageTransactions);
+    }
+
+    private boolean shouldShowPage(int page, int pageCount) {
+        return page == 0
+                || page == pageCount - 1
+                || Math.abs(page - currentPage) <= 1;
+    }
+
+
+
+    private void renderPagination(HBox box) {
+        box.getChildren().clear();
+
+        int pageCount = getPageCount();
+        if (pageCount <= 1) return;
+
+        // <
+        Button prev = new Button("<");
+        prev.setDisable(currentPage == 0);
+        prev.setOnAction(e -> {
+            loadPage(currentPage - 1);
+//            currentPage--;
+//            updateAll();
+        });
+        box.getChildren().add(prev);
+
+        for (int i = 0; i < pageCount; i++) {
+            if (shouldShowPage(i, pageCount)) {
+                int pageIndex = i;
+
+                Button btn = new Button(String.valueOf(i + 1));
+                btn.setDisable(i == currentPage);
+                btn.setOnAction(e -> {
+                    loadPage(pageIndex);
+//                    currentPage = pageIndex;
+//                    updateAll();
+                });
+
+                box.getChildren().add(btn);
+            } else if (i == currentPage + 2) {
+                box.getChildren().add(new Label("..."));
+            }
+        }
+
+        // >
+        Button next = new Button(">");
+        next.setDisable(currentPage >= pageCount - 1);
+        next.setOnAction(e -> {
+            loadPage(currentPage + 1);
+//            currentPage++;
+//            updateAll();
+        });
+        box.getChildren().add(next);
+    }
+
+    private void updateAll() {
+        updateTable();
+        updatePagination();
+    }
+
+    private void updatePagination() {
+        renderPagination(paginationTop);
+        renderPagination(paginationBottom);
+    }
+
+
+
+
+
 
     // ================== TYPES ==================
 

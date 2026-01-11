@@ -38,6 +38,7 @@ public class MainController {
     @FXML
     private void initialize() {
         // демо-данные, чтобы UI выглядел живым
+        // TODO: get username and role
         setUser("Name Surname", Role.LEADER);
         setPageTitle("Dashboard");
     }
@@ -246,8 +247,6 @@ public class MainController {
                     openTransactions(mode);
                 }
             });
-
-            // TODO: c.setItems(... загрузка данных под mode ...)
         });
     }
 
