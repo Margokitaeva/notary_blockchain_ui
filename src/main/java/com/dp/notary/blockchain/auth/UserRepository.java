@@ -23,21 +23,6 @@ public class UserRepository {
     }
 
     /**
-     * Инициализация таблицы users, если её нет
-     */
-    public void init() {
-        String sql = """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL UNIQUE,
-                password_hash TEXT NOT NULL,
-                role TEXT NOT NULL
-            );
-        """;
-        jdbcTemplate.execute(sql);
-    }
-
-    /**
      * Поиск роли пользователя по имени
      */
     public String findByName(String name) {
