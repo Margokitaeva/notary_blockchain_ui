@@ -10,9 +10,9 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final TokenProvider tokenProvider;
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository, TokenProvider tokenProvider) {
         this.userRepository = userRepository;
-        this.tokenProvider = new TokenProvider();
+        this.tokenProvider = tokenProvider;
     }
 
     /**

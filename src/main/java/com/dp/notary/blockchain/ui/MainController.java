@@ -1,10 +1,13 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.auth.AuthService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MainController {
 
     // ===== HEADER =====
@@ -18,6 +21,12 @@ public class MainController {
 
     // ===== CENTER PLACEHOLDER =====
     @FXML private VBox contentRoot;
+
+    private final AuthService authService;
+
+    public MainController(AuthService authService) {
+        this.authService = authService;
+    }
 
     // ===== INIT =====
     @FXML

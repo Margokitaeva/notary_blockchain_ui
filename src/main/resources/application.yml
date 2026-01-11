@@ -4,7 +4,9 @@ server:
 notary:
   role: LEADER
   leaderUrl: http://localhost:8080
-
+tokens:
+  TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
+  ValideTime: 600000
 spring:
   datasource:
     url: jdbc:sqlite:./notary.db
@@ -14,3 +16,4 @@ spring:
     init:
       mode: always
       schema-locations: classpath:schema.sql
+

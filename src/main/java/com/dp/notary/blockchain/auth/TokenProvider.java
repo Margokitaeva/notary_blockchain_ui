@@ -3,21 +3,24 @@ package com.dp.notary.blockchain.auth;
 import com.dp.notary.blockchain.Config;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
-
+@Component
 public class TokenProvider {
-
     private final Key key;
     private final long validityInMs; // например, 15 минут
 
-    public TokenProvider() {
-        this.key = Keys.hmacShaKeyFor(Config.getInstance().getString("TokenKey").getBytes(StandardCharsets.UTF_8));
-        this.validityInMs = Integer.parseInt(Config.getInstance().getString("ValideTime"));
+    public TokenProvider(
+            @Value("${tokens.TokenKey}") String secret,
+            @Value("${tokens.ValideTime}") int ms
+    ) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.validityInMs = ms;
     }
-
     // 1. Генерация токена
     public String createToken(String name, String role) {
         Date now = new Date();

@@ -9,13 +9,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ConfigurableApplicationContext;
+
 import java.io.IOException;
 
 public class App extends Application {
 
     private static App instance;
     private Stage stage;
-
+    private ConfigurableApplicationContext springContext;
     // размеры окна для auth
     private static final double AUTH_W = 420;
     private static final double AUTH_H = 520;
@@ -23,6 +26,12 @@ public class App extends Application {
     @Override
     public void init() {
         instance = this;
+        springContext = new SpringApplicationBuilder(SApp.class)
+                .run();
+        try {
+            Config.getInstance().loadConfig();
+        }
+        catch(Exception ignored) {}
     }
 
     public static App get() {
@@ -88,10 +97,15 @@ public class App extends Application {
 
     private Parent loadFXML(String path) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
+        loader.setControllerFactory(springContext::getBean);
         return loader.load();
     }
 
     public static void main(String[] args) {
         launch(args);
+    }
+    @Override
+    public void stop() {
+        springContext.close();
     }
 }

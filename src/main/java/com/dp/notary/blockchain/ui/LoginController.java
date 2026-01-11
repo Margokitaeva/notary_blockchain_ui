@@ -1,18 +1,25 @@
 package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
+import com.dp.notary.blockchain.auth.AuthService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-
+@Component
 public class LoginController {
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private Label errorLabel;
+    private final AuthService authService;
+
+    public LoginController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @FXML
     private void onLogin() throws IOException {
@@ -27,6 +34,7 @@ public class LoginController {
         }
 
         // TODO: тут будет запрос к backend / проверка роли Leader/Follower
+
         App.get().showMain();
     }
 
