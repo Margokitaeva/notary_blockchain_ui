@@ -43,21 +43,12 @@ public class SignupController {
         }
 
         // TODO: тут будет создание аккаунта через backend
-        boolean ok = authService.signUp(u, p1,"Replica");
-        if (ok){
-            String token = authService.login(u,p1);
-            System.out.println("Token: " + token);
-            token = authService.loginWithToken(token);
-            System.out.println("Token: " + token);
-            String name = authService.getNameFromToken(token);
-            System.out.println("Name: " + name);
-            String role = authService.getRoleFromToken(token);
-            System.out.println("Role: " + role);
-            System.out.println(authService.validateTokenWithRole(token, role));
-            System.out.println(authService.validateTokenWithRole(token, "hjk"));
-
+        boolean ok = authService.signUp(u, p1, "REPLICA");
+        if(!ok){
+            errorLabel.setText("Sign up failed.");
+        }else {
+            App.get().showLogin();
         }
-        App.get().showLogin();
     }
 
     @FXML

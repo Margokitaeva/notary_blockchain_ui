@@ -34,8 +34,15 @@ public class LoginController {
         }
 
         // TODO: тут будет запрос к backend / проверка роли Leader/Follower
-
-        App.get().showMain();
+        String token = authService.login(u, p);
+        if(token.isEmpty()) {
+            errorLabel.setText("Invalid username or password.");
+            errorLabel.setVisible(true);
+        }
+        else {
+            String role = authService.getRoleFromToken(token);
+            App.get().showMain();
+        }
     }
 
     @FXML
