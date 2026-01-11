@@ -1,13 +1,13 @@
 server:
-  port: 8080
+  port: 8081
 
 notary:
-  role: LEADER
+  role: REPLICA
   leaderUrl: http://localhost:8080
 
 spring:
   datasource:
-    url: jdbc:sqlite:./notary.db
+    url: jdbc:sqlite:./notary-replica.db
     driver-class-name: org.sqlite.JDBC
 
   sql:

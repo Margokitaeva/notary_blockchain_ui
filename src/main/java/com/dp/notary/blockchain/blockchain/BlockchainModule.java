@@ -38,6 +38,10 @@ public class BlockchainModule {
         return blocks.findFromHeight(safeFrom, 500);
     }
 
+    public int pendingSize() {
+        return pool.size();
+    }
+
     public String addTransaction(Transaction tx) {
         String txId = tx.txId() == null ? UUID.randomUUID().toString() : tx.txId();
         Transaction normalized = new Transaction(
@@ -80,6 +84,22 @@ public class BlockchainModule {
         if (blocks.findHead().isEmpty()) {
             blocks.append(processor.createGenesisBlock());
         }
+    }
+
+    public boolean approvePending(String txId) {
+        return pool.updateStatus(txId, TransactionStatus.APPROVED);
+    }
+
+    public Optional<Transaction> declinePending(String txId) {
+        return pool.removeById(txId)
+                .map(tx -> new Transaction(
+                        tx.txId(),
+                        tx.type(),
+                        tx.payload(),
+                        tx.createdBy(),
+                        TransactionStatus.DECLINED,
+                        tx.company()
+                ));
     }
 
     private Transaction approve(Transaction tx) {

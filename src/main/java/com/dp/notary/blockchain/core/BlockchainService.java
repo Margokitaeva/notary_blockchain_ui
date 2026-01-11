@@ -101,6 +101,20 @@ public class BlockchainService {
         blockchain.appendValidated(block);
     }
 
+    public boolean approvePending(String txId) {
+        if (isReplica()) {
+            throw new IllegalStateException("Replica cannot approve transactions");
+        }
+        return blockchain.approvePending(txId);
+    }
+
+    public Optional<Transaction> declinePending(String txId) {
+        if (isReplica()) {
+            throw new IllegalStateException("Replica cannot decline transactions");
+        }
+        return blockchain.declinePending(txId);
+    }
+
     private boolean isReplica() {
         return "REPLICA".equalsIgnoreCase(props.role());
     }
