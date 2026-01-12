@@ -1,60 +1,54 @@
 package com.dp.notary.blockchain.blockchain.logic;
 
-import com.dp.notary.blockchain.blockchain.model.Company;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
+import com.dp.notary.blockchain.blockchain.model.TransactionScope;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
-import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ReplicaTransactionStore {
 
-    private final Map<String, Transaction> txs = new ConcurrentHashMap<>();
+    private final TransactionStateRepository repo;
+
+    public ReplicaTransactionStore(TransactionStateRepository repo) {
+        this.repo = repo;
+    }
 
     public void saveDraft(Transaction tx) {
-        txs.put(tx.txId(), copyWithStatus(tx, TransactionStatus.DRAFT));
+        repo.upsert(TransactionScope.REPLICA, withStatus(tx, TransactionStatus.DRAFT));
     }
 
     public void saveSubmitted(Transaction tx) {
-        txs.put(tx.txId(), copyWithStatus(tx, TransactionStatus.SUBMITTED));
+        repo.upsert(TransactionScope.REPLICA, withStatus(tx, TransactionStatus.SUBMITTED));
     }
 
     public void saveDeclined(Transaction tx) {
-        txs.put(tx.txId(), copyWithStatus(tx, TransactionStatus.DECLINED));
+        repo.upsert(TransactionScope.REPLICA, withStatus(tx, TransactionStatus.DECLINED));
     }
 
     public List<Transaction> drafts() {
-        return byStatus(TransactionStatus.DRAFT);
+        return repo.findByScopeAndStatuses(TransactionScope.REPLICA, List.of(TransactionStatus.DRAFT));
     }
 
     public List<Transaction> submitted() {
-        return byStatus(TransactionStatus.SUBMITTED);
+        return repo.findByScopeAndStatuses(TransactionScope.REPLICA, List.of(TransactionStatus.SUBMITTED));
     }
 
     public List<Transaction> declined() {
-        return byStatus(TransactionStatus.DECLINED);
+        return repo.findByScopeAndStatuses(TransactionScope.REPLICA, List.of(TransactionStatus.DECLINED));
     }
 
-    private List<Transaction> byStatus(TransactionStatus status) {
-        return txs.values().stream()
-                .filter(tx -> tx.status() == status)
-                .toList();
-    }
-
-    private Transaction copyWithStatus(Transaction tx, TransactionStatus status) {
-        Company company = tx.company() == null ? null : new Company(tx.company().id(), tx.company().name());
-        TransactionType type = tx.type();
+    private Transaction withStatus(Transaction tx, TransactionStatus status) {
         return new Transaction(
                 tx.txId(),
-                type,
+                tx.type(),
                 tx.payload(),
                 tx.createdBy(),
                 status,
-                company
+                tx.company()
         );
     }
 }
