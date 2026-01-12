@@ -5,5 +5,10 @@ public record SubmitActRequest(
         String payload,
         String createdBy,
         String companyId,
-        String companyName
+        String companyName,
+        java.math.BigDecimal amount,
+        String target,
+        String ownerId,
+        String ownerName,
+        String ownerSurname
 ) {}

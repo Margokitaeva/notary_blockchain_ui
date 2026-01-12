@@ -2,9 +2,11 @@ package com.dp.notary.blockchain.blockchain.persistence;
 
 import com.dp.notary.blockchain.blockchain.entity.BlockEntity;
 import com.dp.notary.blockchain.blockchain.entity.CompanyEntity;
+import com.dp.notary.blockchain.blockchain.entity.OwnerEntity;
 import com.dp.notary.blockchain.blockchain.entity.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.blockchain.model.Company;
+import com.dp.notary.blockchain.blockchain.model.Owner;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
@@ -112,6 +114,10 @@ public class SqliteBlockRepository implements BlockRepository {
         if (entity.getCompany() != null) {
             company = new Company(entity.getCompany().getId(), entity.getCompany().getName());
         }
+        Owner owner = null;
+        if (entity.getOwner() != null) {
+            owner = new Owner(entity.getOwner().getId(), entity.getOwner().getName(), entity.getOwner().getSurname());
+        }
         TransactionStatus status = entity.getStatus() == null ? TransactionStatus.SUBMITTED : entity.getStatus();
         return new Transaction(
                 entity.getTxId(),
@@ -119,7 +125,11 @@ public class SqliteBlockRepository implements BlockRepository {
                 entity.getPayload(),
                 entity.getCreatedBy(),
                 status,
-                company
+                company,
+                owner,
+                entity.getAmount(),
+                entity.getTimestamp(),
+                entity.getTarget()
         );
     }
 
@@ -128,13 +138,21 @@ public class SqliteBlockRepository implements BlockRepository {
         if (tx.company() != null) {
             company = new CompanyEntity(tx.company().id(), tx.company().name());
         }
+        OwnerEntity owner = null;
+        if (tx.owner() != null) {
+            owner = new OwnerEntity(tx.owner().id(), tx.owner().name(), tx.owner().surname());
+        }
         return new TransactionEntity(
                 tx.txId(),
                 tx.type() == null ? null : tx.type().name(),
                 tx.payload(),
                 tx.createdBy(),
                 tx.status(),
-                company
+                company,
+                owner,
+                tx.amount(),
+                tx.timestamp(),
+                tx.target()
         );
     }
 

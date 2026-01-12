@@ -48,7 +48,11 @@ public class ReplicaTransactionStore {
                 tx.payload(),
                 tx.createdBy(),
                 status,
-                tx.company()
+                tx.company(),
+                tx.owner(),
+                tx.amount(),
+                tx.timestamp(),
+                tx.target()
         );
     }
 }

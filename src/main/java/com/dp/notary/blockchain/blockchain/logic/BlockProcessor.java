@@ -3,6 +3,7 @@ package com.dp.notary.blockchain.blockchain.logic;
 import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.blockchain.model.Company;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
+import com.dp.notary.blockchain.blockchain.model.Owner;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import org.springframework.stereotype.Component;
@@ -36,7 +37,11 @@ public class BlockProcessor {
                 "{}",
                 "system",
                 TransactionStatus.APPROVED,
-                new Company("GENESIS", "Genesis Company")
+                new Company("GENESIS", "Genesis Company"),
+                new Owner("system", "Genesis", "Owner"),
+                java.math.BigDecimal.ZERO,
+                clock.instant(),
+                "GENESIS_TARGET"
         );
         return createNextBlock(List.of(genesisTx), null);
     }
@@ -100,6 +105,28 @@ public class BlockProcessor {
                 digest.update(":".getBytes(StandardCharsets.UTF_8));
                 String statusValue = tx.status() == null ? "UNKNOWN" : tx.status().name();
                 digest.update(statusValue.getBytes(StandardCharsets.UTF_8));
+
+                String amountValue = tx.amount() == null ? "0" : tx.amount().toPlainString();
+                digest.update(":".getBytes(StandardCharsets.UTF_8));
+                digest.update(amountValue.getBytes(StandardCharsets.UTF_8));
+
+                String txTs = tx.timestamp() == null ? "0" : Long.toString(tx.timestamp().toEpochMilli());
+                digest.update(":".getBytes(StandardCharsets.UTF_8));
+                digest.update(txTs.getBytes(StandardCharsets.UTF_8));
+
+                String target = tx.target() == null ? "" : tx.target();
+                digest.update(":".getBytes(StandardCharsets.UTF_8));
+                digest.update(target.getBytes(StandardCharsets.UTF_8));
+
+                Owner owner = tx.owner();
+                digest.update(":".getBytes(StandardCharsets.UTF_8));
+                if (owner != null) {
+                    digest.update(owner.id() == null ? new byte[0] : owner.id().getBytes(StandardCharsets.UTF_8));
+                    digest.update(":".getBytes(StandardCharsets.UTF_8));
+                    digest.update(owner.name() == null ? new byte[0] : owner.name().getBytes(StandardCharsets.UTF_8));
+                    digest.update(":".getBytes(StandardCharsets.UTF_8));
+                    digest.update(owner.surname() == null ? new byte[0] : owner.surname().getBytes(StandardCharsets.UTF_8));
+                }
 
                 Company company = tx.company();
                 digest.update(":".getBytes(StandardCharsets.UTF_8));

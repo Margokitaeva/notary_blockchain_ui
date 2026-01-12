@@ -6,12 +6,17 @@ import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.blockchain.model.BlockchainStatus;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
+import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import com.dp.notary.blockchain.blockchain.persistence.BlockRepository;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class BlockchainModule {
@@ -50,7 +55,11 @@ public class BlockchainModule {
                 tx.payload(),
                 tx.createdBy(),
                 tx.status(),
-                tx.company()
+                tx.company(),
+                tx.owner(),
+                tx.amount() == null ? BigDecimal.ZERO : tx.amount(),
+                tx.timestamp() == null ? Instant.now() : tx.timestamp(),
+                tx.target()
         );
         pool.add(normalized);
         return txId;
@@ -98,8 +107,31 @@ public class BlockchainModule {
                         tx.payload(),
                         tx.createdBy(),
                         TransactionStatus.DECLINED,
-                        tx.company()
+                        tx.company(),
+                        tx.owner(),
+                        tx.amount(),
+                        tx.timestamp(),
+                        tx.target()
                 ));
+    }
+
+    public Map<String, BigDecimal> ownerShares(String companyId) {
+        List<Block> chain = blocks.findFromHeight(0, Integer.MAX_VALUE);
+        return chain.stream()
+                .flatMap(b -> b.transactions().stream())
+                .filter(tx -> tx.company() != null && companyId.equals(tx.company().id()))
+                .collect(Collectors.groupingBy(
+                        tx -> tx.owner() == null ? "UNKNOWN" : tx.owner().id(),
+                        Collectors.mapping(this::signedAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
+                ));
+    }
+
+    private BigDecimal signedAmount(Transaction tx) {
+        BigDecimal amount = tx.amount() == null ? BigDecimal.ZERO : tx.amount();
+        if (tx.type() == TransactionType.SELL) {
+            return amount.negate();
+        }
+        return amount;
     }
 
     private Transaction approve(Transaction tx) {
@@ -109,7 +141,11 @@ public class BlockchainModule {
                 tx.payload(),
                 tx.createdBy(),
                 TransactionStatus.APPROVED,
-                tx.company()
+                tx.company(),
+                tx.owner(),
+                tx.amount(),
+                tx.timestamp(),
+                tx.target()
         );
     }
 }

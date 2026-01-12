@@ -2,9 +2,13 @@ package com.dp.notary.blockchain.blockchain.logic;
 
 import com.dp.notary.blockchain.blockchain.model.Company;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
+import com.dp.notary.blockchain.blockchain.model.Owner;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,7 +36,11 @@ class PendingPoolTest {
                 "{}",
                 "alice",
                 TransactionStatus.SUBMITTED,
-                new Company("c1", "Company One")
+                new Company("c1", "Company One"),
+                new Owner("o1", "Alice", "A"),
+                BigDecimal.ONE,
+                Instant.parse("2024-01-01T00:00:00Z"),
+                "target"
         );
     }
 }

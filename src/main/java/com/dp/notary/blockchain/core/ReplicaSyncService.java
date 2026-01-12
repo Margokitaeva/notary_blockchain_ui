@@ -6,41 +6,41 @@ import com.dp.notary.blockchain.blockchain.model.BlockchainStatus;
 import com.dp.notary.blockchain.config.NotaryProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Component
-public class ReplicaSyncScheduler {
+@Service
+public class ReplicaSyncService {
 
-    private static final Logger log = LoggerFactory.getLogger(ReplicaSyncScheduler.class);
+    private static final Logger log = LoggerFactory.getLogger(ReplicaSyncService.class);
 
     private final BlockchainModule blockchain;
     private final LeaderClient leaderClient;
     private final NotaryProperties props;
 
-    public ReplicaSyncScheduler(BlockchainModule blockchain, LeaderClient leaderClient, NotaryProperties props) {
+    public ReplicaSyncService(BlockchainModule blockchain, LeaderClient leaderClient, NotaryProperties props) {
         this.blockchain = blockchain;
         this.leaderClient = leaderClient;
         this.props = props;
     }
 
-    @Scheduled(fixedDelayString = "${notary.replica-sync.delay-ms:1000}")
-    public void syncFromLeader() {
+    public SyncResult syncFromLeader() {
         if (!isReplica()) {
-            return;
+            return SyncResult.skipped("node is leader");
         }
         try {
             long fromHeight = nextHeight();
             List<Block> blocks = leaderClient.getBlocks(fromHeight);
             if (blocks.isEmpty()) {
-                return;
+                return SyncResult.success(0);
             }
             blocks.forEach(blockchain::appendValidated);
             log.info("Replica appended {} block(s) starting from height {}", blocks.size(), fromHeight);
+            return SyncResult.success(blocks.size());
         } catch (Exception e) {
             log.warn("Replica sync failed: {}", e.getMessage());
+            return SyncResult.failed(e.getMessage());
         }
     }
 
@@ -51,5 +51,11 @@ public class ReplicaSyncScheduler {
 
     private boolean isReplica() {
         return "REPLICA".equalsIgnoreCase(props.role());
+    }
+
+    public record SyncResult(boolean ok, int blocks, String reason) {
+        public static SyncResult success(int blocks) { return new SyncResult(true, blocks, null); }
+        public static SyncResult failed(String reason) { return new SyncResult(false, 0, reason); }
+        public static SyncResult skipped(String reason) { return new SyncResult(true, 0, reason); }
     }
 }

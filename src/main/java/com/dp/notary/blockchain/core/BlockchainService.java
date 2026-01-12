@@ -9,12 +9,15 @@ import com.dp.notary.blockchain.blockchain.logic.ReplicaTransactionStore;
 import com.dp.notary.blockchain.blockchain.model.Block;
 import com.dp.notary.blockchain.blockchain.model.BlockchainStatus;
 import com.dp.notary.blockchain.blockchain.model.Company;
+import com.dp.notary.blockchain.blockchain.model.Owner;
 import com.dp.notary.blockchain.blockchain.model.Transaction;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import com.dp.notary.blockchain.config.NotaryProperties;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,13 +30,15 @@ public class BlockchainService {
     private final LeaderClient leaderClient;
     private final ReplicaTransactionStore replicaStore;
     private final LeaderDraftStore leaderDraftStore;
+    private final ReplicaNotifier notifier;
 
-    public BlockchainService(BlockchainModule blockchain, NotaryProperties props, LeaderClient leaderClient, ReplicaTransactionStore replicaStore, LeaderDraftStore leaderDraftStore) {
+    public BlockchainService(BlockchainModule blockchain, NotaryProperties props, LeaderClient leaderClient, ReplicaTransactionStore replicaStore, LeaderDraftStore leaderDraftStore, ReplicaNotifier notifier) {
         this.blockchain = blockchain;
         this.props = props;
         this.leaderClient = leaderClient;
         this.replicaStore = replicaStore;
         this.leaderDraftStore = leaderDraftStore;
+        this.notifier = notifier;
     }
 
     public NodeStatusResponse status() {
@@ -53,7 +58,11 @@ public class BlockchainService {
     public SubmitActResponse submitAct(SubmitActRequest req) {
         TransactionType type = TransactionType.fromString(req.type());
         Company company = new Company(req.companyId(), req.companyName());
+        Owner owner = new Owner(req.ownerId(), req.ownerName(), req.ownerSurname());
         String createdBy = req.createdBy();
+        BigDecimal amount = req.amount() == null ? BigDecimal.ZERO : req.amount();
+        Instant now = Instant.now();
+        String target = req.target();
 
         if (isReplica()) {
             SubmitActResponse resp = leaderClient.forwardAct(req);
@@ -63,7 +72,11 @@ public class BlockchainService {
                     req.payload(),
                     createdBy,
                     TransactionStatus.SUBMITTED,
-                    company
+                    company,
+                    owner,
+                    amount,
+                    now,
+                    target
             );
             replicaStore.saveSubmitted(submitted);
             return resp;
@@ -76,7 +89,11 @@ public class BlockchainService {
                 req.payload(),
                 createdBy,
                 TransactionStatus.DRAFT,
-                company
+                company,
+                owner,
+                amount,
+                now,
+                target
         );
         leaderDraftStore.saveDraft(draft);
 
@@ -86,9 +103,14 @@ public class BlockchainService {
                 req.payload(),
                 createdBy,
                 TransactionStatus.SUBMITTED,
-                company
+                company,
+                owner,
+                amount,
+                now,
+                target
         );
         blockchain.addTransaction(submitted);
+        notifier.notifyReplicas();
 
         return new SubmitActResponse(txId, "ACCEPTED");
     }
@@ -105,7 +127,11 @@ public class BlockchainService {
         if (isReplica()) {
             throw new IllegalStateException("Replica cannot approve transactions");
         }
-        return blockchain.approvePending(txId);
+        boolean ok = blockchain.approvePending(txId);
+        if (ok) {
+            notifier.notifyReplicas();
+        }
+        return ok;
     }
 
     public Optional<Transaction> declinePending(String txId) {
@@ -114,6 +140,7 @@ public class BlockchainService {
         }
         Optional<Transaction> declined = blockchain.declinePending(txId);
         declined.ifPresent(replicaStore::saveDeclined);
+        declined.ifPresent(tx -> notifier.notifyReplicas());
         return declined;
     }
 

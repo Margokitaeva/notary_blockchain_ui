@@ -17,6 +17,12 @@ CREATE TABLE IF NOT EXISTS tx_state (
     status      TEXT,
     company_id  TEXT,
     company_name TEXT,
+    amount      TEXT,
+    ts          TEXT,
+    target      TEXT,
+    owner_id    TEXT,
+    owner_name  TEXT,
+    owner_surname TEXT,
     PRIMARY KEY (tx_id, scope)
 );
 
