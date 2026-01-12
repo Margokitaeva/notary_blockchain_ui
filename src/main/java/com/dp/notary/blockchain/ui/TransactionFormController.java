@@ -1,5 +1,6 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.auth.Role;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -31,7 +32,7 @@ public class TransactionFormController {
 
     // ===== MODE / ROLE =====
     private FormMode mode = FormMode.CREATE;
-    private MainController.Role role = MainController.Role.REPLICA;
+    private Role role = Role.REPLICA;
 
     // ===== CURRENT USER (editor / creator for new tx) =====
     private String currentUser = "Unknown";
@@ -65,7 +66,7 @@ public class TransactionFormController {
         applyModeUI();
     }
 
-    public void setRole(MainController.Role role) {
+    public void setRole(Role role) {
         this.role = Objects.requireNonNull(role);
         applyModeUI();
     }
@@ -122,7 +123,7 @@ public class TransactionFormController {
         TransactionPayload payload = buildAndValidatePayload();
         if (payload == null) return;
 
-        boolean approveImmediately = (role == MainController.Role.LEADER);
+        boolean approveImmediately = (role == Role.LEADER);
         actions.onSubmit(payload, approveImmediately);
     }
 
@@ -215,7 +216,7 @@ public class TransactionFormController {
         createdByLabel.setText(createdByToShow);
 
         // submit button text by role
-        submitBtn.setText(role == MainController.Role.LEADER ? "Submit and approve" : "Submit");
+        submitBtn.setText(role == Role.LEADER ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {

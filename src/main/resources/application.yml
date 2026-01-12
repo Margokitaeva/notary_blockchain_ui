@@ -7,6 +7,7 @@ notary:
 tokens:
   TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
   ValideTime: 600000
+  leaderUserName: chuila
 
 spring:
   datasource:

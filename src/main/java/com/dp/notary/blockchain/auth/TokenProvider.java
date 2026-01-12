@@ -22,13 +22,13 @@ public class TokenProvider {
         this.validityInMs = ms;
     }
     // 1. Генерация токена
-    public String createToken(String name, String role) {
+    public String createToken(String name, Role role) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityInMs);
 
         return Jwts.builder()
                 .setSubject(name)
-                .claim("role", role)
+                .claim("role", role.toString())
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -53,7 +53,7 @@ public class TokenProvider {
                 .getBody();
 
         String name = claims.getSubject();
-        String role = claims.get("role", String.class);
+        Role role = Role.valueOf(claims.get("role", String.class));
 
         // Генерируем новый токен
         return createToken(name, role);
@@ -66,10 +66,10 @@ public class TokenProvider {
         return claims.getSubject();
     }
 
-    public String getRole(String token) {
+    public Role getRole(String token) {
         Claims claims = Jwts.parser().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody();
-        return claims.get("role", String.class);
+        return Role.valueOf(claims.get("role", String.class));
     }
 }
 

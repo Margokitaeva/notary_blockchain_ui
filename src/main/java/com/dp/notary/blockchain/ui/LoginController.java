@@ -33,14 +33,13 @@ public class LoginController {
             return;
         }
 
-        // TODO: тут будет запрос к backend / проверка роли Leader/Follower
         String token = authService.login(u, p);
         if(token == null) {
             errorLabel.setText("Invalid username or password.");
             errorLabel.setVisible(true);
         }
         else {
-            String role = authService.getRoleFromToken(token);
+            App.get().setToken(token);
             App.get().showMain();
         }
     }

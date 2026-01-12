@@ -4,14 +4,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.beans.factory.annotation.Value;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
 public class UserRepository {
 
     private final JdbcTemplate jdbcTemplate;
+    @Value("${tokens.leaderUserName}")
+    private String leader;
 
     public UserRepository(JdbcTemplate jdbc) {
         this.jdbcTemplate = jdbc;
@@ -25,7 +29,7 @@ public class UserRepository {
             String name = rs.getString("name");
             String role = rs.getString("role");
             String hash = rs.getString("password_hash");
-            return new User(id, name, role, hash);
+            return new User(id, name, Role.valueOf(role), hash);
         }
     };
 
@@ -40,7 +44,7 @@ public class UserRepository {
                     new User(
                             rs.getLong("id"),
                             rs.getString("name"),
-                            rs.getString("role"),
+                            Role.valueOf(rs.getString("role")),
                             ""
                     ), name);
             return Optional.of(user);
@@ -56,6 +60,7 @@ public class UserRepository {
         try {
             String sql = "SELECT id, name, role, password_hash FROM users WHERE name = ? AND password_hash = ?";
             User user = jdbcTemplate.queryForObject(sql, USER_MAPPER, name, passwordHash);
+            assert user != null;
             return Optional.of(user);
         } catch (Exception e) {
             return Optional.empty();
@@ -65,10 +70,14 @@ public class UserRepository {
     /**
      * Сохранение пользователя
      */
-    public boolean saveUser(String name, String passwordHash, String role) {
+    public boolean saveUser(String name, String passwordHash) {
         try {
             String sql = "INSERT INTO users(name, password_hash, role) VALUES(?, ?, ?)";
-            jdbcTemplate.update(sql, name, passwordHash, role);
+            if (Objects.equals(name, leader)){
+                jdbcTemplate.update(sql, name, passwordHash, Role.valueOf("LEADER"));
+            }else {
+                jdbcTemplate.update(sql, name, passwordHash, Role.valueOf("FOLLOWER"));
+            }
             return true;
         } catch (Exception e) {
             return false;

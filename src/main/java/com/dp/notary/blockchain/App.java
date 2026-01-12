@@ -9,6 +9,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -22,7 +24,9 @@ public class App extends Application {
     // размеры окна для auth
     private static final double AUTH_W = 420;
     private static final double AUTH_H = 520;
-
+    @Getter
+    @Setter
+    private String token = "";
     @Override
     public void init() {
         instance = this;
@@ -108,4 +112,5 @@ public class App extends Application {
     public void stop() {
         springContext.close();
     }
+
 }

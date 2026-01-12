@@ -42,8 +42,7 @@ public class SignupController {
             return;
         }
 
-        // TODO: тут будет создание аккаунта через backend
-        boolean ok = authService.signUp(u, p1, "REPLICA");
+        boolean ok = authService.signUp(u, p1);
         if(!ok){
             errorLabel.setText("Sign up failed.");
         }else {

@@ -1,5 +1,6 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
-
+import com.dp.notary.blockchain.auth.Role;
 import java.io.IOException;
 import java.util.function.Consumer;
 
@@ -30,10 +31,6 @@ public class MainController {
     // ===== CENTER PLACEHOLDER =====
     @FXML private VBox contentRoot;
 
-    // ===== SESSION (текущее состояние пользователя) =====
-    private String currentUserFullName = "Name Surname";
-    private Role currentRole = Role.LEADER;
-
     // for cancel to return list, that was before
     private TransactionsListController.Mode lastTxListMode = TransactionsListController.Mode.PENDING;
 
@@ -46,17 +43,13 @@ public class MainController {
     // ===== INIT =====
     @FXML
     private void initialize() {
-        // демо-данные, чтобы UI выглядел живым
-        // TODO: get username and role
-        setUser("Name Surname", Role.LEADER);
+        setUser(authService.getNameFromToken(App.get().getToken()), authService.getRoleFromToken((App.get().getToken())));
         setPageTitle("Dashboard");
     }
 
     // ===== PUBLIC API (потом дергать из App/Auth) =====
 
     public void setUser(String fullName, Role role) {
-        this.currentUserFullName = fullName;
-        this.currentRole = role;
 
         userNameLabel.setText("User: " + fullName);
         roleLabel.setText("Role: " + role.displayName());
@@ -91,6 +84,7 @@ public class MainController {
 //            // c.setItems(FXCollections.observableArrayList(api.getApprovedTransactions()));
 //        });
 //        clearContent();
+
     }
 
     @FXML
@@ -184,8 +178,8 @@ public class MainController {
             TransactionFormController f = (TransactionFormController) controller;
 
             f.setMode(TransactionFormController.FormMode.CREATE);
-            f.setRole(currentRole);
-            f.setCurrentUser(currentUserFullName);
+            f.setRole(authService.getRoleFromToken(App.get().getToken()));
+            f.setCurrentUser(authService.getNameFromToken(App.get().getToken()));
 
             f.setActions(new TransactionFormController.Actions() {
                 @Override
@@ -266,8 +260,8 @@ public class MainController {
             TransactionFormController f = (TransactionFormController) controller;
 
             f.setMode(TransactionFormController.FormMode.EDIT);
-            f.setRole(currentRole);
-            f.setCurrentUser(currentUserFullName);
+            f.setRole(authService.getRoleFromToken(App.get().getToken()));
+            f.setCurrentUser(authService.getNameFromToken(App.get().getToken()));
 
             // ВАЖНО:
             // Сейчас твой TransactionFormController ожидает СВОЙ TransactionVM record.
@@ -319,19 +313,4 @@ public class MainController {
         });
     }
 
-    // ===== ROLE ENUM =====
-    public enum Role {
-        LEADER("Leader"),
-        REPLICA("Replica");
-
-        private final String label;
-
-        Role(String label) {
-            this.label = label;
-        }
-
-        public String displayName() {
-            return label;
-        }
-    }
 }

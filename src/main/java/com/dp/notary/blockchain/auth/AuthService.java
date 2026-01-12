@@ -1,8 +1,7 @@
 package com.dp.notary.blockchain.auth;
+import com.dp.notary.blockchain.ui.MainController;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -19,12 +18,12 @@ public class AuthService {
      * Регистрация нового пользователя
      * Возвращает 0 если успешно, 1 если пользователь существует или ошибка
      */
-    public boolean signUp(String name, String passwordHash, String role) {
+    public boolean signUp(String name, String passwordHash) {
         Optional<User> existing = userRepository.findByName(name);
         if (existing.isPresent()) {
             return false; // пользователь уже существует
         }
-        return userRepository.saveUser(name, passwordHash, role);
+        return userRepository.saveUser(name, passwordHash);
 
     }
 
@@ -62,7 +61,7 @@ public class AuthService {
     /**
      * Получить роль пользователя из токена
      */
-    public String getRoleFromToken(String token) {
+    public Role getRoleFromToken(String token) {
         if (!tokenProvider.validateToken(token)) return null;
         return tokenProvider.getRole(token);
     }
@@ -71,9 +70,9 @@ public class AuthService {
      * Проверка токена и роли пользователя
      * Возвращает true если токен валиден и роль совпадает
      */
-    public boolean validateTokenWithRole(String token, String expectedRole) {
+    public boolean validateTokenWithRole(String token, Role expectedRole) {
         if (!tokenProvider.validateToken(token)) return false;
-        String role = tokenProvider.getRole(token);
+        Role role = tokenProvider.getRole(token);
         return expectedRole.equals(role);
     }
 

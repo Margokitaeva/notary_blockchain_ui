@@ -24,6 +24,7 @@ public class BlockchainModule {
         this.blocks = blocks;
         this.pool = pool;
         this.processor = processor;
+        ensureGenesis();
     }
 
     public BlockchainStatus status() {
