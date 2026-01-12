@@ -1,0 +1,19 @@
+server:
+  port: 8080
+
+notary:
+  role: LEADER
+  leaderUrl: http://localhost:8080
+tokens:
+  TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
+  ValideTime: 600000
+spring:
+  datasource:
+    url: jdbc:sqlite:./notary.db
+    driver-class-name: org.sqlite.JDBC
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+

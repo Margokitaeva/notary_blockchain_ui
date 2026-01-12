@@ -1,11 +1,13 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.auth.AuthService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -13,6 +15,7 @@ import java.util.function.Consumer;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+@Component
 public class MainController {
 
     // ===== HEADER =====
@@ -33,6 +36,12 @@ public class MainController {
 
     // for cancel to return list, that was before
     private TransactionsListController.Mode lastTxListMode = TransactionsListController.Mode.PENDING;
+
+    private final AuthService authService;
+
+    public MainController(AuthService authService) {
+        this.authService = authService;
+    }
 
     // ===== INIT =====
     @FXML
