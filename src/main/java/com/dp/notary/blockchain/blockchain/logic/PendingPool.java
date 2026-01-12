@@ -1,65 +1,47 @@
 package com.dp.notary.blockchain.blockchain.logic;
 
 import com.dp.notary.blockchain.blockchain.model.Transaction;
+import com.dp.notary.blockchain.blockchain.model.TransactionScope;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
+import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Component
 public class PendingPool {
-    private final List<Transaction> txs = new ArrayList<>();
+    private final TransactionStateRepository repo;
 
-    public synchronized void add(Transaction tx) {
-        txs.add(tx);
+    public PendingPool(TransactionStateRepository repo) {
+        this.repo = repo;
     }
 
-    public synchronized int size() {
-        return txs.size();
+    public void add(Transaction tx) {
+        repo.upsert(TransactionScope.PENDING, tx);
     }
 
-    public synchronized List<Transaction> snapshot() {
-        return List.copyOf(txs);
+    public int size() {
+        return repo.countByScopeAndStatuses(TransactionScope.PENDING, List.of(TransactionStatus.SUBMITTED, TransactionStatus.APPROVED));
     }
 
-    public synchronized List<Transaction> drainAll() {
-        List<Transaction> copy = new ArrayList<>(txs);
-        txs.clear();
-        return copy;
+    public List<Transaction> snapshot() {
+        return repo.findByScopeAndStatuses(TransactionScope.PENDING, List.of(TransactionStatus.SUBMITTED, TransactionStatus.APPROVED));
     }
 
-    public synchronized boolean updateStatus(String txId, TransactionStatus status) {
-        for (int i = 0; i < txs.size(); i++) {
-            Transaction tx = txs.get(i);
-            if (tx.txId().equals(txId)) {
-                txs.set(i, withStatus(tx, status));
-                return true;
-            }
-        }
-        return false;
+    public List<Transaction> drainAll() {
+        List<Transaction> txs = snapshot();
+        repo.deleteAll(TransactionScope.PENDING, txs.stream().map(Transaction::txId).toList());
+        return txs;
     }
 
-    public synchronized Optional<Transaction> removeById(String txId) {
-        for (int i = 0; i < txs.size(); i++) {
-            Transaction tx = txs.get(i);
-            if (tx.txId().equals(txId)) {
-                txs.remove(i);
-                return Optional.of(tx);
-            }
-        }
-        return Optional.empty();
+    public boolean updateStatus(String txId, TransactionStatus status) {
+        return repo.updateStatus(TransactionScope.PENDING, txId, status);
     }
 
-    private Transaction withStatus(Transaction tx, TransactionStatus status) {
-        return new Transaction(
-                tx.txId(),
-                tx.type(),
-                tx.payload(),
-                tx.createdBy(),
-                status,
-                tx.company()
-        );
+    public Optional<Transaction> removeById(String txId) {
+        Optional<Transaction> found = repo.find(TransactionScope.PENDING, txId);
+        found.ifPresent(tx -> repo.delete(TransactionScope.PENDING, txId));
+        return found;
     }
 }

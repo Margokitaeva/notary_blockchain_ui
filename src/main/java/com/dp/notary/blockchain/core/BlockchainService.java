@@ -112,7 +112,9 @@ public class BlockchainService {
         if (isReplica()) {
             throw new IllegalStateException("Replica cannot decline transactions");
         }
-        return blockchain.declinePending(txId);
+        Optional<Transaction> declined = blockchain.declinePending(txId);
+        declined.ifPresent(replicaStore::saveDeclined);
+        return declined;
     }
 
     private boolean isReplica() {
