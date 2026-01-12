@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,7 +47,10 @@ public class BlockchainModule {
     }
 
     public String addTransaction(Transaction tx) {
-        String txId = tx.txId() == null ? UUID.randomUUID().toString() : tx.txId();
+        if (tx.txId() == null || tx.txId().isBlank()) {
+            throw new IllegalArgumentException("Transaction must have a predefined txId");
+        }
+        String txId = tx.txId();
         Transaction normalized = new Transaction(
                 txId,
                 tx.type(),

@@ -10,5 +10,6 @@ public record SubmitActRequest(
         String target,
         String ownerId,
         String ownerName,
-        String ownerSurname
+        String ownerSurname,
+        String clientRequestId
 ) {}

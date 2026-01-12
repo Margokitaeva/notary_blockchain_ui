@@ -27,3 +27,21 @@ CREATE TABLE IF NOT EXISTS tx_state (
 );
 
 CREATE INDEX IF NOT EXISTS idx_tx_state_scope ON tx_state(scope);
+
+CREATE TABLE IF NOT EXISTS tx_id_sequence (
+    name         TEXT PRIMARY KEY,
+    current_value INTEGER NOT NULL
+);
+
+INSERT OR IGNORE INTO tx_id_sequence(name, current_value) VALUES ('tx', 0);
+
+CREATE TABLE IF NOT EXISTS tx_id_keys (
+    client_key TEXT PRIMARY KEY,
+    tx_id      TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS replica_draft_buffer (
+    client_key TEXT PRIMARY KEY,
+    payload    TEXT NOT NULL,
+    created_at TEXT
+);

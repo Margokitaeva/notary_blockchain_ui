@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
 import com.dp.notary.blockchain.blockchain.model.Block;
+import com.dp.notary.blockchain.blockchain.model.Transaction;
 import com.dp.notary.blockchain.config.NotaryProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -44,6 +45,15 @@ public class HttpLeaderClient implements LeaderClient {
                 .uri(uriBuilder -> uriBuilder.path("/api/blocks").queryParam("fromHeight", fromHeight).build())
                 .retrieve()
                 .body(Block[].class);
+        return arr == null ? List.of() : List.of(arr);
+    }
+
+    @Override
+    public List<Transaction> getLeaderDrafts() {
+        Transaction[] arr = rest.get()
+                .uri("/api/queues/drafts/leader")
+                .retrieve()
+                .body(Transaction[].class);
         return arr == null ? List.of() : List.of(arr);
     }
 }
