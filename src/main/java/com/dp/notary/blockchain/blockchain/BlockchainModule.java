@@ -113,4 +113,7 @@ public class BlockchainModule {
                 tx.company()
         );
     }
+    public long getChainSize(){
+        return blocks.getHeight();
+    }
 }

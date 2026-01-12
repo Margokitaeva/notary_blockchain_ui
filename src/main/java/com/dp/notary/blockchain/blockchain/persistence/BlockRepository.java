@@ -10,4 +10,5 @@ public interface BlockRepository {
     List<Block> findFromHeight(long fromHeight, int limit);
     void append(Block block);
     boolean existsHeight(long height);
+    long getHeight();
 }

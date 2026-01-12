@@ -62,7 +62,7 @@ public class MainController {
         pageTitle.setText(title);
     }
 
-    // ===== MENU ACTIONS =====
+    // ===== MENU ACTIONS =====d
 
     @FXML
     private void onDashboard() {
@@ -142,8 +142,11 @@ public class MainController {
 
     @FXML
     private void onLogout() {
-        // позже: App.showLogin()
-        System.out.println("Logout clicked");
+        try {
+            App.get().setToken(null);
+            App.get().showLogin();
+        }
+        catch (IOException ignored) {}
     }
 
     // ===== HELPERS =====

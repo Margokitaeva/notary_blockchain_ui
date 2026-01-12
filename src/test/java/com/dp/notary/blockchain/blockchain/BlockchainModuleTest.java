@@ -93,5 +93,10 @@ class BlockchainModuleTest {
         public boolean existsHeight(long height) {
             return blocks.stream().anyMatch(b -> b.height() == height);
         }
+
+        @Override
+        public long getHeight() {
+            return blocks.size();
+        }
     }
 }

@@ -76,7 +76,7 @@ public class UserRepository {
             if (Objects.equals(name, leader)){
                 jdbcTemplate.update(sql, name, passwordHash, Role.valueOf("LEADER"));
             }else {
-                jdbcTemplate.update(sql, name, passwordHash, Role.valueOf("FOLLOWER"));
+                jdbcTemplate.update(sql, name, passwordHash, Role.valueOf("REPLICA"));
             }
             return true;
         } catch (Exception e) {

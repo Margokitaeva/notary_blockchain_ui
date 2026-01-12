@@ -45,6 +45,7 @@ public class SignupController {
         boolean ok = authService.signUp(u, p1);
         if(!ok){
             errorLabel.setText("Sign up failed.");
+            errorLabel.setVisible(true);
         }else {
             App.get().showLogin();
         }

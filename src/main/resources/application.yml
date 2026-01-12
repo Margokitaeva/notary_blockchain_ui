@@ -8,6 +8,9 @@ tokens:
   TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
   ValideTime: 600000
   leaderUserName: chuila
+ui:
+  pageSize: 15
+  txPerBlock: 5
 
 spring:
   datasource:

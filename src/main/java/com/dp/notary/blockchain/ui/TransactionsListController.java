@@ -1,5 +1,8 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.blockchain.BlockchainModule;
+import jakarta.annotation.PostConstruct;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -12,14 +15,16 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Objects;
-
+@Component
 public class TransactionsListController {
 
     // ===== FILTERS (one row) =====
@@ -75,10 +80,12 @@ public class TransactionsListController {
 
     @FXML private Button resubmitBtn;
 
-    // TODO: move to config if needed
-    private static final int PAGE_SIZE = 15;
-    private static final int TX_PER_BLOCK = 5;
-    private static final int BLOCKS_PER_PAGE = PAGE_SIZE / TX_PER_BLOCK; // = 3
+    @Value("${ui.pageSize}")
+    private int PAGE_SIZE;
+    @Value("${ui.txPerBlock}")
+    private int TX_PER_BLOCK;
+
+    private int BLOCKS_PER_PAGE;
 
     private int currentPage = 0;
     private final ObservableList<TransactionRowVM> pageTransactions = FXCollections.observableArrayList();
@@ -105,8 +112,19 @@ public class TransactionsListController {
                     .withLocale(Locale.US)
                     .withZone(ZoneId.systemDefault());
 
+    // ================== MODULES ==================
+    private BlockchainModule blockchain;
+    private AuthService authService;
     // ================== PUBLIC API ==================
 
+    TransactionsListController(BlockchainModule blockchain,AuthService authService){
+        this.blockchain = blockchain;
+        this.authService = authService;
+    }
+    @PostConstruct
+    private void init(){
+        BLOCKS_PER_PAGE = PAGE_SIZE / TX_PER_BLOCK;
+    }
     public void setItems(ObservableList<TransactionRowVM> items) {
         master.setAll(items);
     }
@@ -454,7 +472,7 @@ public class TransactionsListController {
         int blockCount = BLOCKS_PER_PAGE;
 
         // TODO: get blockCount number of blocks (instead of fetchBlocksFromServer), use this.Mode
-
+        // TODO: нету репо связанного с транзакциями
         // mode APPROVED = transaction status APPROVED
         // mode DRAFTS = transaction status DRAFT for current user - i guess you dont have it in this file do you need to add ??
         // mode PENDING = transaction status SUBMITTED any user
@@ -476,11 +494,11 @@ public class TransactionsListController {
     }
 
     private int getPageCount() {
-        // TODO: get number of blocks here
         // number of pages = number of blocks * 5 / PAGE_SIZE
         // если есть у Кати переменная,в  которой написано сколько транзакций в блоке, то можно вместо 5 вписать эту переменную
         // либо если мы планируем сделать много транзакций в блоке потом то тогда надо делать пересчет чтобы одномоментно было 15-20 транзакций отображено
-        int totalBlocks = 30; // заглушка
+
+        long totalBlocks = blockchain.getChainSize();
         return (int) Math.ceil((double) totalBlocks / BLOCKS_PER_PAGE);
     }
 

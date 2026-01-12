@@ -46,6 +46,15 @@ public class SqliteBlockRepository implements BlockRepository {
     }
 
     @Override
+    public long getHeight() {
+        Long count = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM blocks",
+                Long.class
+        );
+        return count != null ? count : 0;
+    }
+
+    @Override
     public List<Block> findFromHeight(long fromHeight, int limit) {
         return jdbc.query(
                 "SELECT height, hash, prev_hash, ts, tx_json FROM blocks WHERE height >= ? ORDER BY height ASC LIMIT ?",
