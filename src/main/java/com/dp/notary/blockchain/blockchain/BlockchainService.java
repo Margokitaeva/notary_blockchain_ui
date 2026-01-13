@@ -27,6 +27,7 @@ public class BlockchainService {
         this.txRepo = txRepo;
         this.blockRepo = blockRepo;
         this.blockProcessor = blockProcessor;
+        createGenesisBlock();
     }
 
     public void addDraft(TransactionEntity tx) {

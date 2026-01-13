@@ -2,6 +2,7 @@ package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -76,15 +77,6 @@ public class MainController {
 
         openTransactions(TransactionsListController.Mode.APPROVED);
 
-//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-//            TransactionsListController c = (TransactionsListController) controller;
-//            c.setMode(TransactionsListController.Mode.APPROVED);
-//
-//            // TODO: вместо демо — список из API:
-//            // c.setItems(FXCollections.observableArrayList(api.getApprovedTransactions()));
-//        });
-//        clearContent();
-
     }
 
     @FXML
@@ -101,13 +93,6 @@ public class MainController {
 
         openTransactions(TransactionsListController.Mode.DRAFTS);
 
-//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-//            TransactionsListController c = (TransactionsListController) controller;
-//            c.setMode(TransactionsListController.Mode.DRAFTS);
-//
-//            // TODO: c.setItems(FXCollections.observableArrayList(api.getDrafts()));
-//        });
-//        clearContent();
     }
 
     @FXML
@@ -115,14 +100,6 @@ public class MainController {
         setPageTitle("Pending Transactions");
 
         openTransactions(TransactionsListController.Mode.PENDING);
-
-//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-//            TransactionsListController c = (TransactionsListController) controller;
-//            c.setMode(TransactionsListController.Mode.PENDING);
-//
-//            // TODO: c.setItems(FXCollections.observableArrayList(api.getPending()));
-//        });
-//        clearContent();
     }
 
     @FXML
@@ -130,14 +107,6 @@ public class MainController {
         setPageTitle("My Submitted Transactions");
 
         openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
-
-//        loadIntoContent("/fxml/TransactionsListView.fxml", controller -> {
-//            TransactionsListController c = (TransactionsListController) controller;
-//            c.setMode(TransactionsListController.Mode.MY_SUBMITTED);
-//
-//            // TODO: c.setItems(FXCollections.observableArrayList(api.getMySubmittedAndDeclined()));
-//        });
-//        clearContent();
     }
 
     @FXML
@@ -181,8 +150,6 @@ public class MainController {
             TransactionFormController f = (TransactionFormController) controller;
 
             f.setMode(TransactionFormController.FormMode.CREATE);
-            f.setRole(authService.getRoleFromToken(App.get().getToken()));
-            f.setCurrentUser(authService.getNameFromToken(App.get().getToken()));
 
             f.setActions(new TransactionFormController.Actions() {
                 @Override
@@ -192,8 +159,9 @@ public class MainController {
                 }
 
                 @Override
-                public void onSaveDraft(TransactionFormController.TransactionPayload data) {
+                public void onSaveDraft() {
                     // TODO: api.saveDraft(data)
+
                     openTransactions(TransactionsListController.Mode.DRAFTS);
                 }
 
@@ -257,15 +225,13 @@ public class MainController {
     }
 
     private void openEditTransaction(TransactionsListController.TransactionRowVM tx) {
-        setPageTitle("Edit transaction #" + tx.id());
+        setPageTitle("Edit transaction");
 
         loadIntoContent("/fxml/TransactionFormView.fxml", controller -> {
             TransactionFormController f = (TransactionFormController) controller;
 
             f.setMode(TransactionFormController.FormMode.EDIT);
-            f.setRole(authService.getRoleFromToken(App.get().getToken()));
-            f.setCurrentUser(authService.getNameFromToken(App.get().getToken()));
-
+            f.
             // ВАЖНО:
             // Сейчас твой TransactionFormController ожидает СВОЙ TransactionVM record.
             // Самый простой путь — сделать маппинг:
@@ -273,7 +239,7 @@ public class MainController {
                     new TransactionFormController.TransactionFormVM(
                             tx.id(),
                             LocalDateTime.ofInstant(tx.timestamp(), ZoneId.systemDefault()),
-                            TransactionFormController.TransactionType.valueOf(tx.type().name()),
+                            TransactionType.valueOf(tx.type().name()),
                             tx.createdBy(),
                             tx.initiator(),
                             tx.target(),
@@ -289,14 +255,14 @@ public class MainController {
                 }
 
                 @Override
-                public void onSaveDraft(TransactionFormController.TransactionPayload data) {
+                public void onSaveDraft() {
                     // timestamp в data уже будет NOW (как ты хотела)
                     // TODO: api.updateDraftOrSaveDraft(data)
                     openTransactions(TransactionsListController.Mode.DRAFTS);
                 }
 
                 @Override
-                public void onSubmit(TransactionFormController.TransactionPayload data, boolean approveImmediately) {
+                public void onSubmit(boolean approveImmediately) {
                     // TODO: api.updateAndSubmit(data, approveImmediately)
 //                  // TODO: тут реальный вызов API
                     //    // если approveImmediately=true -> submit+approve
