@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane fx:id="root"
+            xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.dp.notary.blockchain.ui.DashboardController"
+            stylesheets="@/css/dashboard.css">
+
+    <!-- TOP: Company name -->
+    <top>
+        <Label fx:id="companyNameLabel"
+               styleClass="page-title"
+               text="Company name"
+               BorderPane.alignment="CENTER_LEFT"
+               padding="0 0 12 0"/>
+    </top>
+
+    <!-- CENTER: table + filters -->
+    <center>
+        <VBox spacing="10">
+
+            <!-- Filter -->
+            <HBox spacing="10">
+                <VBox>
+                    <Label text="Filter by owner"/>
+                    <TextField fx:id="ownerFilterField"
+                               promptText="Owner name"/>
+                </VBox>
+            </HBox>
+
+            <!-- Table -->
+            <TableView fx:id="sharesTable"
+                       VBox.vgrow="ALWAYS">
+
+                <columns>
+                    <TableColumn fx:id="ownerCol"
+                                 text="Owner"/>
+                    <TableColumn fx:id="sharesCol"
+                                 text="Shares"/>
+                </columns>
+            </TableView>
+
+            <!-- Footer -->
+            <Label fx:id="totalSharesLabel"
+                   text="Total shares: 0"
+                   styleClass="footer-label"/>
+        </VBox>
+    </center>
+
+    <!-- RIGHT: stats -->
+    <right>
+        <VBox fx:id="statsBox"
+              spacing="20"
+              padding="0 0 0 24"/>
+    </right>
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+</BorderPane>

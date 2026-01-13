@@ -67,7 +67,46 @@ public class MainController {
     @FXML
     private void onDashboard() {
         setPageTitle("Dashboard");
-        clearContent();
+        clearContent(); // comment this
+        // TODO: uncomment everything below when connect to existing functions
+//        loadIntoContent("/fxml/DashboardView.fxml", controller -> {
+//            DashboardController c = (DashboardController) controller;
+//
+//            // TODO get current company (send only String name)
+//            c.setCompany(new DashboardController.CompanyVM(
+//                    /* company.getName() */
+//            ));
+//
+//            // TODO ledger state -> shares per owner
+//            c.setSharesData(
+//                    /* List<OwnerSharesVM> */,
+//                    /* totalShares */
+//            );
+//
+//            // TODO int number of: total number transactions, pending number transactions,
+//            //  drafts per user number transactions
+//            if (currentRole == Role.LEADER) {
+//                c.configureForLeader(
+//                        new DashboardController.LeaderStatsVM(
+//                                /* total */,
+//                                /* pending */,
+//                                /* drafts */
+//                        )
+//                );
+//            } else {
+//                // TODO int number of: total number transactions, submitted number transactions,
+//                //  drafts per user number transactions, declined per user number transactions
+//                c.configureForReplica(
+//                        new DashboardController.ReplicaStatsVM(
+//                                /* total */,
+//                                /* submitted */,
+//                                /* drafts */,
+//                                /* declined */
+//                        )
+//                );
+//            }
+//        });
+
     }
 
     @FXML
