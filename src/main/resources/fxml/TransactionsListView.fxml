@@ -43,10 +43,10 @@
             </VBox>
 
             <!-- Status (only MY_SUBMITTED) -->
-            <VBox fx:id="statusFilterBox" managed="false" spacing="2" visible="false">
-                <Label styleClass="tx-filter-label" text="Status" />
-                <ComboBox fx:id="filterStatus" prefWidth="150" />
-            </VBox>
+<!--            <VBox fx:id="statusFilterBox" managed="false" spacing="2" visible="false">-->
+<!--                <Label styleClass="tx-filter-label" text="Status" />-->
+<!--                <ComboBox fx:id="filterStatus" prefWidth="150" />-->
+<!--            </VBox>-->
 
             <!-- CLEAR BUTTON aligned with fields -->
             <VBox spacing="2">
@@ -79,7 +79,7 @@
                     <TableColumn fx:id="colId" prefWidth="80" text="ID" />
 
                     <!-- only visible in MY_SUBMITTED mode -->
-                    <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />
+<!--                    <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />-->
 
                     <TableColumn fx:id="colType" prefWidth="120" text="Type" />
                     <TableColumn fx:id="colCreatedBy" prefWidth="160" text="Created by" />
@@ -110,8 +110,8 @@
                 <Label styleClass="tx-field-label" text="Time" />
                 <Label fx:id="detailsTime" styleClass="tx-field-value" text="—" />
 
-                <Label fx:id="detailsStatusLabel" managed="false" styleClass="tx-field-label" text="Status" visible="false" />
-                <Label fx:id="detailsStatus" managed="false" styleClass="tx-field-value" text="—" visible="false" />
+<!--                <Label fx:id="detailsStatusLabel" managed="false" styleClass="tx-field-label" text="Status" visible="false" />-->
+<!--                <Label fx:id="detailsStatus" managed="false" styleClass="tx-field-value" text="—" visible="false" />-->
 
                 <Label styleClass="tx-field-label" text="Type" />
                 <Label fx:id="detailsType" styleClass="tx-field-value" text="—" />

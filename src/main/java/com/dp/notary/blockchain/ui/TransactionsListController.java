@@ -33,14 +33,14 @@ public class TransactionsListController {
     @FXML private TextField filterTarget;
 
     @FXML private ComboBox<TypeFilterItem> filterType;
-    @FXML private ComboBox<StatusFilterItem> filterStatus; // visible only in MY_SUBMITTED
+//    @FXML private ComboBox<StatusFilterItem> filterStatus; // visible only in MY_SUBMITTED
 
     // ===== TABLE =====
     @FXML private TableView<TransactionRowVM> table;
 
     @FXML private TableColumn<TransactionRowVM, String> colTime;
     @FXML private TableColumn<TransactionRowVM, String> colId;
-    @FXML private TableColumn<TransactionRowVM, String> colStatus; // only MY_SUBMITTED
+//    @FXML private TableColumn<TransactionRowVM, String> colStatus; // only MY_SUBMITTED
     @FXML private TableColumn<TransactionRowVM, String> colType;
     @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
     @FXML private TableColumn<TransactionRowVM, String> colInitiator;
@@ -59,8 +59,8 @@ public class TransactionsListController {
     @FXML private Label detailsId;
     @FXML private Label detailsTime;
 
-    @FXML private Label detailsStatusLabel;
-    @FXML private Label detailsStatus;
+//    @FXML private Label detailsStatusLabel;
+//    @FXML private Label detailsStatus;
 
     @FXML private Label detailsType;
     @FXML private Label detailsCreatedBy;
@@ -115,23 +115,26 @@ public class TransactionsListController {
     // ================== MODULES ==================
     private BlockchainModule blockchain;
     private AuthService authService;
+
     // ================== PUBLIC API ==================
 
     TransactionsListController(BlockchainModule blockchain,AuthService authService){
         this.blockchain = blockchain;
         this.authService = authService;
     }
+
     @PostConstruct
     private void init(){
         BLOCKS_PER_PAGE = PAGE_SIZE / TX_PER_BLOCK;
     }
+
     public void setItems(ObservableList<TransactionRowVM> items) {
         master.setAll(items);
     }
 
     public void setMode(Mode mode) {
         this.mode = Objects.requireNonNull(mode);
-        applyModeUI();
+//        applyModeUI();
         reapplyFilter();         // status filter affects predicate only in MY_SUBMITTED
         refreshActions();        // buttons depend on mode + status
         updateDetails(table.getSelectionModel().getSelectedItem());
@@ -150,7 +153,7 @@ public class TransactionsListController {
         setupDataPipeline();
         setupListeners();
 
-        applyModeUI();
+//        applyModeUI();
         resetDetails();
         refreshActions();
 
@@ -173,7 +176,7 @@ public class TransactionsListController {
     private void setupColumns() {
         colTime.setCellValueFactory(c -> new SimpleStringProperty(TIME_FMT.format(c.getValue().timestamp())));
         colId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().id()));
-        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status().name()));
+//        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status().name()));
         colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().type().name()));
         colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().createdBy())));
         colInitiator.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().initiator())));
@@ -189,7 +192,7 @@ public class TransactionsListController {
         colInitiator.setSortable(true);
         colTarget.setSortable(true);
         colAmount.setSortable(true);
-        colStatus.setSortable(false); // ты хотела статус НЕ сортировать
+//        colStatus.setSortable(false); // ты хотела статус НЕ сортировать
     }
 
     private void setupCombos() {
@@ -204,12 +207,12 @@ public class TransactionsListController {
         filterType.getSelectionModel().selectFirst();
 
         // Status filter: ALL + SUBMITTED/DECLINED
-        filterStatus.setItems(FXCollections.observableArrayList(
-                StatusFilterItem.all(),
-                StatusFilterItem.of(TxStatus.SUBMITTED),
-                StatusFilterItem.of(TxStatus.DECLINED)
-        ));
-        filterStatus.getSelectionModel().selectFirst();
+//        filterStatus.setItems(FXCollections.observableArrayList(
+//                StatusFilterItem.all(),
+//                StatusFilterItem.of(TxStatus.SUBMITTED),
+//                StatusFilterItem.of(TxStatus.DECLINED)
+//        ));
+//        filterStatus.getSelectionModel().selectFirst();
     }
 
     private void setupDataPipeline() {
@@ -222,7 +225,7 @@ public class TransactionsListController {
         table.setItems(sorted);
 
         // hide status column by default (enabled in MY_SUBMITTED)
-        colStatus.setVisible(false);
+//        colStatus.setVisible(false);
     }
 
     private void setupListeners() {
@@ -231,7 +234,7 @@ public class TransactionsListController {
         filterInitiator.textProperty().addListener((obs, o, n) -> reapplyFilter());
         filterTarget.textProperty().addListener((obs, o, n) -> reapplyFilter());
         filterType.valueProperty().addListener((obs, o, n) -> reapplyFilter());
-        filterStatus.valueProperty().addListener((obs, o, n) -> reapplyFilter());
+//        filterStatus.valueProperty().addListener((obs, o, n) -> reapplyFilter());
 
         // Selection -> details + buttons
         table.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
@@ -261,12 +264,12 @@ public class TransactionsListController {
         }
 
         // Status (enum) filter only in MY_SUBMITTED
-        if (mode == Mode.MY_SUBMITTED) {
-            StatusFilterItem sf = filterStatus.getValue();
-            if (sf != null && sf.status() != null) {
-                if (tx.status() != sf.status()) return false;
-            }
-        }
+//        if (mode == Mode.MY_SUBMITTED) {
+//            StatusFilterItem sf = filterStatus.getValue();
+//            if (sf != null && sf.status() != null) {
+//                if (tx.status() != sf.status()) return false;
+//            }
+//        }
 
         // Partial text filters (case-insensitive)
         if (!containsIgnoreCase(tx.createdBy(), filterCreatedBy.getText())) return false;
@@ -283,7 +286,7 @@ public class TransactionsListController {
         filterTarget.clear();
 
         filterType.getSelectionModel().selectFirst();
-        filterStatus.getSelectionModel().selectFirst();
+//        filterStatus.getSelectionModel().selectFirst();
 
         reapplyFilter();
     }
@@ -294,7 +297,7 @@ public class TransactionsListController {
         detailsHint.setText("Select a transaction from the table.");
         detailsId.setText("—");
         detailsTime.setText("—");
-        detailsStatus.setText("—");
+//        detailsStatus.setText("—");
         detailsType.setText("—");
         detailsCreatedBy.setText("—");
         detailsInitiator.setText("—");
@@ -317,34 +320,34 @@ public class TransactionsListController {
         detailsTarget.setText(nullToDash(tx.target()));
         detailsAmount.setText(String.valueOf(tx.amount()));
 
-        if (mode == Mode.MY_SUBMITTED) {
-            detailsStatus.setText(tx.status().name());
-        } else {
-            detailsStatus.setText("—");
-        }
+//        if (mode == Mode.MY_SUBMITTED) {
+//            detailsStatus.setText(tx.status().name());
+//        } else {
+//            detailsStatus.setText("—");
+//        }
     }
 
     // ================== MODE UI ==================
 
-    private void applyModeUI() {
-        boolean showStatusUI = (mode == Mode.MY_SUBMITTED);
+//    private void applyModeUI() {
+//        boolean showStatusUI = (mode == Mode.MY_SUBMITTED);
 
         // Status filter combobox shown only in MY_SUBMITTED
-        filterStatus.setVisible(showStatusUI);
-        filterStatus.setManaged(showStatusUI);
+//        filterStatus.setVisible(showStatusUI);
+//        filterStatus.setManaged(showStatusUI);
 
         // Status column visible only in MY_SUBMITTED
-        colStatus.setVisible(showStatusUI);
+//        colStatus.setVisible(showStatusUI);
 
         // Status in details visible only in MY_SUBMITTED
-        detailsStatusLabel.setVisible(showStatusUI);
-        detailsStatusLabel.setManaged(showStatusUI);
-        detailsStatus.setVisible(showStatusUI);
-        detailsStatus.setManaged(showStatusUI);
+//        detailsStatusLabel.setVisible(showStatusUI);
+//        detailsStatusLabel.setManaged(showStatusUI);
+//        detailsStatus.setVisible(showStatusUI);
+//        detailsStatus.setManaged(showStatusUI);
 
         // Also hide decline box when switching mode
 //        hideDeclineBox();
-    }
+//    }
 
     private void refreshActions() {
         TransactionRowVM selected = table.getSelectionModel().getSelectedItem();
@@ -372,11 +375,15 @@ public class TransactionsListController {
                 show(declineBtn);
             }
             case MY_SUBMITTED -> {
-                if (selected.status() == TxStatus.DECLINED) {
-                    show(editBtn);
-                    show(deleteBtn);
-                    show(resubmitBtn);
-                }
+//                if (selected.status() == TxStatus.DECLINED) {
+//
+//                }
+                // no actions
+            }
+            case DECLINED -> {
+                show(editBtn);
+                show(deleteBtn);
+                show(resubmitBtn);
             }
         }
     }
@@ -580,7 +587,8 @@ public class TransactionsListController {
         APPROVED,
         DRAFTS,
         PENDING,
-        MY_SUBMITTED
+        MY_SUBMITTED,
+        DECLINED
     }
 
     public enum TxStatus {

@@ -27,6 +27,7 @@ public class MainController {
     // ===== MENU (role-based) =====
     @FXML private Button pendingBtn;     // leader only
     @FXML private Button submittedBtn;   // replica only
+    @FXML private Button declinedBtn;
 
     // ===== CENTER PLACEHOLDER =====
     @FXML private VBox contentRoot;
@@ -111,7 +112,7 @@ public class MainController {
 
     @FXML
     private void onTransactions() {
-        setPageTitle("Transactions");
+//        setPageTitle("Transactions");
 
         openTransactions(TransactionsListController.Mode.APPROVED);
 
@@ -136,7 +137,7 @@ public class MainController {
 
     @FXML
     private void onDrafts() {
-        setPageTitle("Drafts");
+//        setPageTitle("Drafts");
 
         openTransactions(TransactionsListController.Mode.DRAFTS);
 
@@ -151,7 +152,7 @@ public class MainController {
 
     @FXML
     private void onPending() {
-        setPageTitle("Pending Transactions");
+//        setPageTitle("Pending Transactions");
 
         openTransactions(TransactionsListController.Mode.PENDING);
 
@@ -166,7 +167,7 @@ public class MainController {
 
     @FXML
     private void onSubmitted() {
-        setPageTitle("My Submitted Transactions");
+//        setPageTitle("My Submitted Transactions");
 
         openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
 
@@ -177,6 +178,13 @@ public class MainController {
 //            // TODO: c.setItems(FXCollections.observableArrayList(api.getMySubmittedAndDeclined()));
 //        });
 //        clearContent();
+    }
+
+    @FXML
+    private void onDeclined() {
+//        setPageTitle("My Declined Transactions");
+
+        openTransactions(TransactionsListController.Mode.DECLINED);
     }
 
     @FXML
@@ -251,9 +259,10 @@ public class MainController {
 
         setPageTitle(
                 switch (mode) {
-                    case PENDING -> "Pending";
+                    case PENDING -> "Pending transactions";
                     case DRAFTS -> "Drafts";
-                    case MY_SUBMITTED -> "My submitted";
+                    case MY_SUBMITTED -> "My submitted transactions";
+                    case DECLINED -> "My declined transactions";
                     default -> "Dashboard";
                 }
         );

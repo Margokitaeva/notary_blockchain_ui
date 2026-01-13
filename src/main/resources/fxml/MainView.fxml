@@ -38,6 +38,11 @@
                     onAction="#onSubmitted"
                     styleClass="nav-btn"/>
 
+            <Button fx:id="declinedBtn"
+                    text="My Declined Transactions"
+                    onAction="#onDeclined"
+                    styleClass="nav-btn"/>
+
             <Region VBox.vgrow="ALWAYS"/>
 
             <Separator />
