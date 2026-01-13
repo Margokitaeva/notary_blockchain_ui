@@ -8,9 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-
-    private long id;
-
     private String name;
     private Role role;
     private String hash;

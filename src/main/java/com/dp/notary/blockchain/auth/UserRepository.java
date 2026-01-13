@@ -25,11 +25,10 @@ public class UserRepository {
     private static final RowMapper<User> USER_MAPPER = new RowMapper<>() {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Long id = rs.getLong("id");
             String name = rs.getString("name");
             String role = rs.getString("role");
             String hash = rs.getString("password_hash");
-            return new User(id, name, Role.valueOf(role), hash);
+            return new User(name, Role.valueOf(role), hash);
         }
     };
 
@@ -39,14 +38,9 @@ public class UserRepository {
      */
     public Optional<User> findByName(String name) {
         try {
-            String sql = "SELECT id, name, role FROM users WHERE name = ?";
-            User user = jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
-                    new User(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            Role.valueOf(rs.getString("role")),
-                            ""
-                    ), name);
+            String sql = "SELECT name, role FROM users WHERE name = ?";
+            User user = jdbcTemplate.queryForObject(sql, USER_MAPPER, name);
+            assert user != null;
             return Optional.of(user);
         } catch (Exception e) {
             return Optional.empty();
@@ -58,7 +52,7 @@ public class UserRepository {
      */
     public Optional<User> findByNameAndHash(String name, String passwordHash) {
         try {
-            String sql = "SELECT id, name, role, password_hash FROM users WHERE name = ? AND password_hash = ?";
+            String sql = "SELECT name, role, password_hash FROM users WHERE name = ? AND password_hash = ?";
             User user = jdbcTemplate.queryForObject(sql, USER_MAPPER, name, passwordHash);
             assert user != null;
             return Optional.of(user);

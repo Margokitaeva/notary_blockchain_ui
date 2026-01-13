@@ -3,8 +3,8 @@ package com.dp.notary.blockchain.auth;
 import java.util.Arrays;
 
 public enum Role {
-    LEADER("Leader"),
-    REPLICA("Replica");
+    LEADER("LEADER"),
+    REPLICA("REPLICA");
 
     private final String label;
 
