@@ -4,8 +4,8 @@ import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.PendingActionResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
-import com.dp.notary.blockchain.blockchain.model.Block;
-import com.dp.notary.blockchain.core.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.BlockEntity;
+import com.dp.notary.blockchain.blockchain.BlockchainService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +33,8 @@ public class BlockchainController {
     }
 
     @GetMapping("/blocks")
-    public List<Block> blocks(@RequestParam(name = "fromHeight", defaultValue = "0") long fromHeight) {
-        return svc.getBlocks(fromHeight);
+    public List<BlockEntity> blocks(@RequestParam(name = "fromHeight", defaultValue = "0") long fromHeight) {
+        return svc.getBlocks(fromHeight,500);
     }
 
     @PostMapping("/acts")
@@ -55,6 +55,6 @@ public class BlockchainController {
     public PendingActionResponse decline(@RequestParam("txId") String txId) {
         var declined = svc.declinePending(txId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pending transaction not found"));
-        return new PendingActionResponse(declined.txId(), "DECLINED");
+        return new PendingActionResponse(declined.getTxId(), "DECLINED");
     }
 }

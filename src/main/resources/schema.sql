@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS blocks
 (
-    height INTEGER PRIMARY KEY,
+    height INTEGER PRIMARY KEY AUTOINCREMENT,
     hash TEXT NOT NULL,
     prev_hash TEXT,
-    ts TEXT NOT NULL,
+    time_stamp TEXT NOT NULL,
     tx_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS users
@@ -14,18 +14,11 @@ CREATE TABLE IF NOT EXISTS users
     role          TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_blocks_height ON blocks (height);
-
-CREATE TABLE IF NOT EXISTS tx_state (
-    tx_id       TEXT NOT NULL,
-    scope       TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS transactions (
+    id       TEXT PRIMARY KEY AUTOINCREMENT,
     type        TEXT,
     payload     TEXT,
     created_by  TEXT,
-    status      TEXT,
-    company_id  TEXT,
-    company_name TEXT,
-    PRIMARY KEY (tx_id, scope)
+    status      TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_tx_state_scope ON tx_state(scope);

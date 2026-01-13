@@ -1,9 +1,6 @@
 package com.dp.notary.blockchain.core;
 
-import com.dp.notary.blockchain.blockchain.BlockchainModule;
-import com.dp.notary.blockchain.blockchain.model.Block;
-import com.dp.notary.blockchain.blockchain.model.BlockchainStatus;
-import com.dp.notary.blockchain.config.NotaryProperties;
+import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,14 +13,10 @@ public class ReplicaSyncScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(ReplicaSyncScheduler.class);
 
-    private final BlockchainModule blockchain;
     private final LeaderClient leaderClient;
-    private final NotaryProperties props;
 
-    public ReplicaSyncScheduler(BlockchainModule blockchain, LeaderClient leaderClient, NotaryProperties props) {
-        this.blockchain = blockchain;
+    public ReplicaSyncScheduler(LeaderClient leaderClient) {
         this.leaderClient = leaderClient;
-        this.props = props;
     }
 
     @Scheduled(fixedDelayString = "${notary.replica-sync.delay-ms:1000}")
@@ -33,7 +26,7 @@ public class ReplicaSyncScheduler {
         }
         try {
             long fromHeight = nextHeight();
-            List<Block> blocks = leaderClient.getBlocks(fromHeight);
+            List<BlockEntity> blocks = leaderClient.getBlocks(fromHeight);
             if (blocks.isEmpty()) {
                 return;
             }
@@ -45,7 +38,7 @@ public class ReplicaSyncScheduler {
     }
 
     private long nextHeight() {
-        BlockchainStatus status = blockchain.status();
+        //BlockchainStatus status = blockchain.status();
         return status.headHeight() + 1;
     }
 

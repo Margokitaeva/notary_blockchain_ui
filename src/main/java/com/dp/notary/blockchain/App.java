@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -27,6 +28,9 @@ public class App extends Application {
     @Getter
     @Setter
     private String token = "";
+    @Getter
+    @Value("${notary.role}")
+    private String AppRole;
     @Override
     public void init() {
         instance = this;
