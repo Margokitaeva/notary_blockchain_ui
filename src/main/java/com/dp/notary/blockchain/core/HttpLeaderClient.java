@@ -43,4 +43,13 @@ public class HttpLeaderClient implements LeaderClient {
                 .body(BlockEntity[].class);
         return arr == null ? List.of() : List.of(arr);
     }
+
+    @Override
+    public List<Transaction> getLeaderDrafts() {
+        Transaction[] arr = rest.get()
+                .uri("/api/queues/drafts/leader")
+                .retrieve()
+                .body(Transaction[].class);
+        return arr == null ? List.of() : List.of(arr);
+    }
 }
