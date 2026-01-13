@@ -1,9 +1,10 @@
 package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.auth.AuthService;
-import com.dp.notary.blockchain.blockchain.BlockchainModule;
+import com.dp.notary.blockchain.blockchain.model.*;
 import jakarta.annotation.PostConstruct;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -14,16 +15,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+
 @Component
 public class TransactionsListController {
 
@@ -39,7 +39,7 @@ public class TransactionsListController {
     @FXML private TableView<TransactionRowVM> table;
 
     @FXML private TableColumn<TransactionRowVM, String> colTime;
-    @FXML private TableColumn<TransactionRowVM, String> colId;
+//    @FXML private TableColumn<TransactionRowVM, Number> colId;
 //    @FXML private TableColumn<TransactionRowVM, String> colStatus; // only MY_SUBMITTED
     @FXML private TableColumn<TransactionRowVM, String> colType;
     @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
@@ -113,13 +113,11 @@ public class TransactionsListController {
                     .withZone(ZoneId.systemDefault());
 
     // ================== MODULES ==================
-    private BlockchainModule blockchain;
     private AuthService authService;
 
     // ================== PUBLIC API ==================
 
-    TransactionsListController(BlockchainModule blockchain,AuthService authService){
-        this.blockchain = blockchain;
+    TransactionsListController(AuthService authService){
         this.authService = authService;
     }
 
@@ -157,26 +155,14 @@ public class TransactionsListController {
         resetDetails();
         refreshActions();
 
-        // demo data (можешь убрать, когда подключишь API)
-        if (master.isEmpty()) {
-            master.addAll(
-                    TransactionRowVM.demo("T-001", Instant.now().minusSeconds(900), TxStatus.SUBMITTED, TransactionType.PURCHASE,
-                            "Alice Leader", "John", "Kate", 120.0),
-                    TransactionRowVM.demo("T-002", Instant.now().minusSeconds(700), TxStatus.DECLINED, TransactionType.GRANT,
-                            "Bob Replica", "Kate", "John", 50.0),
-                    TransactionRowVM.demo("T-003", Instant.now().minusSeconds(500), TxStatus.SUBMITTED, TransactionType.DIVIDEND,
-                            "Alice Leader", "Company", "Owners", 999.0)
-            );
-        }
-
 //        loadTransactionsFromBlocks();
         loadPage(0);
     }
 
     private void setupColumns() {
         colTime.setCellValueFactory(c -> new SimpleStringProperty(TIME_FMT.format(c.getValue().timestamp())));
-        colId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().id()));
 //        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status().name()));
+//        colId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().id()));
         colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().type().name()));
         colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().createdBy())));
         colInitiator.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().initiator())));
@@ -186,7 +172,7 @@ public class TransactionsListController {
         // TableView built-in sorting works via comparatorProperty binding (we do it below)
         // Ensure columns are sortable (default true), keep it explicit:
         colTime.setSortable(true);
-        colId.setSortable(true);
+//        colId.setSortable(true);
         colType.setSortable(true);
         colCreatedBy.setSortable(true);
         colInitiator.setSortable(true);
@@ -295,7 +281,7 @@ public class TransactionsListController {
 
     private void resetDetails() {
         detailsHint.setText("Select a transaction from the table.");
-        detailsId.setText("—");
+//        detailsId.setText("—");
         detailsTime.setText("—");
 //        detailsStatus.setText("—");
         detailsType.setText("—");
@@ -312,7 +298,7 @@ public class TransactionsListController {
         }
 
         detailsHint.setText("Selected transaction:");
-        detailsId.setText(tx.id());
+//        detailsId.setText(tx.id());
         detailsTime.setText(TIME_FMT.format(tx.timestamp()));
         detailsType.setText(tx.type().name());
         detailsCreatedBy.setText(nullToDash(tx.createdBy()));
@@ -485,15 +471,15 @@ public class TransactionsListController {
         // mode PENDING = transaction status SUBMITTED any user
         // mode MY_SUBMITTED = transaction status SUBMITTED (same as above) DECLINED for current user - i guess you dont have it in this file do you need to add ??
 
-//        List<Block> blocks = fetchBlocksFromServer(fromBlock, blockCount);
+        List<BlockEntity> blocks = blockchain.getBlocks(fromBlock, blockCount);
 
-//        pageTransactions.clear();
-//
-//        for (Block block : blocks) {
-//            for (Transaction tx : block.getTransactions()) {
-//                pageTransactions.add(new TransactionVM(tx));
-//            }
-//        }
+        pageTransactions.clear();
+
+        for (BlockEntity block : blocks) {
+            for (TransactionEntity tx : block.getTransactions()) {
+                pageTransactions.add(new TransactionRowVM(tx));
+            }
+        }
 
         currentPage = page;
         updateTable();
@@ -576,11 +562,6 @@ public class TransactionsListController {
         renderPagination(paginationBottom);
     }
 
-
-
-
-
-
     // ================== TYPES ==================
 
     public enum Mode {
@@ -590,26 +571,18 @@ public class TransactionsListController {
         MY_SUBMITTED,
         DECLINED
     }
-
-    public enum TxStatus {
-        SUBMITTED, DECLINED
-    }
-
-    public enum TransactionType {
-        PURCHASE, SELL, GRANT, DIVIDEND
-    }
-
+    
     public record TypeFilterItem(TransactionType type, String label) {
         public static TypeFilterItem all() { return new TypeFilterItem(null, "All"); }
         public static TypeFilterItem of(TransactionType t) { return new TypeFilterItem(t, t.name()); }
         @Override public String toString() { return label; }
     }
 
-    public record StatusFilterItem(TxStatus status, String label) {
-        public static StatusFilterItem all() { return new StatusFilterItem(null, "All"); }
-        public static StatusFilterItem of(TxStatus s) { return new StatusFilterItem(s, s.name()); }
-        @Override public String toString() { return label; }
-    }
+//    public record StatusFilterItem(TransactionStatus status, String label) {
+//        public static StatusFilterItem all() { return new StatusFilterItem(null, "All"); }
+//        public static StatusFilterItem of(TransactionStatus s) { return new StatusFilterItem(s, s.name()); }
+//        @Override public String toString() { return label; }
+//    }
 
     public interface Actions {
         void onEdit(TransactionRowVM tx);
@@ -620,10 +593,10 @@ public class TransactionsListController {
     }
 
     public static final class  TransactionRowVM {
-        private final SimpleStringProperty id = new SimpleStringProperty();
+        private final SimpleIntegerProperty id = new SimpleIntegerProperty();
         private final SimpleLongProperty timestampEpoch = new SimpleLongProperty();
 
-        private final TxStatus status;
+        private final TransactionStatus status;
         private final TransactionType type;
 
         private final SimpleStringProperty createdBy = new SimpleStringProperty();
@@ -632,9 +605,9 @@ public class TransactionsListController {
 
         private final SimpleDoubleProperty amount = new SimpleDoubleProperty();
 
-        public TransactionRowVM(String id,
+        public TransactionRowVM(int id,
                              Instant timestamp,
-                             TxStatus status,
+                             TransactionStatus status,
                              TransactionType type,
                              String createdBy,
                              String initiator,
@@ -649,10 +622,19 @@ public class TransactionsListController {
             this.target.set(target);
             this.amount.set(amount);
         }
+        public TransactionRowVM(TransactionEntity tx) {
+            this.id.set(tx.getTxId());
+            this.timestampEpoch.set(0);
+            this.status = tx.getStatus();
+            this.type = tx.getType();
+            this.createdBy.set(tx.getCreatedBy());
+            this.target.set(tx.getPayload());//TODO: расшифровать payload
+            this.amount.set(tx.getPayload().length());
+        }
 
-        public String id() { return id.get(); }
+        public int id() { return id.get(); }
         public Instant timestamp() { return Instant.ofEpochSecond(timestampEpoch.get()); }
-        public TxStatus status() { return status; }
+        public TransactionStatus status() { return status; }
         public TransactionType type() { return type; }
         public String createdBy() { return createdBy.get(); }
         public String initiator() { return initiator.get(); }
@@ -662,7 +644,7 @@ public class TransactionsListController {
         // for PropertyValueFactory("amount")
         public double getAmount() { return amount.get(); }
 
-        public static TransactionRowVM demo(String id, Instant ts, TxStatus st, TransactionType tp,
+        public static TransactionRowVM demo(int id, Instant ts, TransactionStatus st, TransactionType tp,
                                          String createdBy, String initiator, String target, double amount) {
             return new TransactionRowVM(id, ts, st, tp, createdBy, initiator, target, amount);
         }

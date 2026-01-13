@@ -1,16 +1,24 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.App;
+import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.Role;
+import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
+import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
+import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.util.StringConverter;
+import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
-
+@Component
 public class TransactionFormController {
 
     // ===== UI =====
@@ -29,13 +37,11 @@ public class TransactionFormController {
     @FXML private Button cancelBtn;
     @FXML private Button draftBtn;
     @FXML private Button submitBtn;
+    private final AuthService authService;
+    private final BlockchainService blockchainService;
 
-    // ===== MODE / ROLE =====
+    // ===== MODE =====
     private FormMode mode = FormMode.CREATE;
-    private Role role = Role.REPLICA;
-
-    // ===== CURRENT USER (editor / creator for new tx) =====
-    private String currentUser = "Unknown";
 
     // ===== EXISTING TRANSACTION (for EDIT) =====
     // Здесь мы храним то, что пришло из списка (ID, старый timestamp и т.д.)
@@ -45,11 +51,16 @@ public class TransactionFormController {
     // ===== CALLBACKS =====
     private Actions actions = new Actions() {
         @Override public void onCancel() { System.out.println("Cancel"); }
-        @Override public void onSaveDraft(TransactionPayload data) { System.out.println("Save draft: " + data); }
-        @Override public void onSubmit(TransactionPayload data, boolean approveImmediately) {
-            System.out.println("Submit: " + data + " approve=" + approveImmediately);
+        @Override public void onSaveDraft() { System.out.println("Save draft"); }
+        @Override public void onSubmit(boolean approveImmediately) {
+            System.out.println("Submit approve=" + approveImmediately);
         }
     };
+
+    public TransactionFormController(AuthService authService, BlockchainService blockchainService) {
+        this.authService = authService;
+        this.blockchainService = blockchainService;
+    }
 
     @FXML
     private void initialize() {
@@ -63,17 +74,6 @@ public class TransactionFormController {
 
     public void setMode(FormMode mode) {
         this.mode = Objects.requireNonNull(mode);
-        applyModeUI();
-    }
-
-    public void setRole(Role role) {
-        this.role = Objects.requireNonNull(role);
-        applyModeUI();
-    }
-
-    public void setCurrentUser(String fullName) {
-        this.currentUser = (fullName == null || fullName.isBlank()) ? "Unknown" : fullName;
-        // createdByLabel обновим в applyModeUI()
         applyModeUI();
     }
 
@@ -112,19 +112,43 @@ public class TransactionFormController {
     @FXML
     private void onSaveDraft() {
         clearError();
-        TransactionPayload payload = buildAndValidatePayload();
-        if (payload == null) return;
-        actions.onSaveDraft(payload);
+        if (buildAndValidatePayload()){
+            if(Objects.equals(App.get().getAppRole(), "LEADER")){
+                TransactionEntity tx = new TransactionEntity(
+                        0,
+                        typeCombo.getValue(),
+                        trimToNull(targetField.getText())+trimToNull(amountField.getText())+trimToNull(initiatorField.getText()),
+                        authService.getNameFromToken(App.get().getToken()),
+                        TransactionStatus.DRAFT
+                );
+                blockchainService.addDraft(tx);
+                actions.onSaveDraft();
+                //TODO:рассылка всем что новый драфт
+            }
+            else{
+                //TODO:отправка черновика лидеру
+                actions.onSaveDraft();;
+            }
+        }
+
     }
 
     @FXML
     private void onSubmit() {
         clearError();
-        TransactionPayload payload = buildAndValidatePayload();
-        if (payload == null) return;
+        if (buildAndValidatePayload()) {
+            if(Objects.equals(App.get().getAppRole(), "LEADER")){
 
-        boolean approveImmediately = (role == Role.LEADER);
-        actions.onSubmit(payload, approveImmediately);
+                    if(authService.getRoleFromToken(App.get().getToken()) == Role.LEADER){
+
+                    }
+            }
+
+
+
+            boolean approveImmediately = ();
+            actions.onSubmit(approveImmediately);
+        }
     }
 
     // ================= PAYLOAD + VALIDATION =================
@@ -139,54 +163,51 @@ public class TransactionFormController {
      * Для CREATE:
      * - ID = null (backend создаст новый)
      */
-    private TransactionPayload buildAndValidatePayload() {
+    private boolean buildAndValidatePayload() {
         TransactionType type = typeCombo.getValue();
         String initiator = trimToNull(initiatorField.getText());
         String target = trimToNull(targetField.getText());
         String amountRaw = trimToNull(amountField.getText());
 
-        if (type == null) return error("Type is required.");
-        if (initiator == null) return error("Initiator is required.");
-        if (target == null) return error("Target is required.");
-        if (amountRaw == null) return error("Amount is required.");
-
-        int amount;
-        try {
-            amount = Integer.parseInt(amountRaw);
-        } catch (NumberFormatException e) {
-            return error("Amount must be an integer.");
+        if (type == null){
+            error("Type is required.");
+            return false;
         }
-        if (amount < 0) return error("Amount must be >= 0.");
+        if (initiator == null){
+            error("Initiator is required.");
+            return false;
+        }
+        if (target == null){
+            error("Target is required.");
+            return false;
+        }
+        if (amountRaw == null){
+            error("Amount is required.");
+            return false;
+        }
 
-        // timestamp обновляется на сохранении
-        LocalDateTime newTimestamp = LocalDateTime.now();
+        BigDecimal amount = new BigDecimal(-1);
 
-        // id: только для EDIT
-        String id = (mode == FormMode.EDIT && existing != null) ? existing.id() : null;
-
+        try {
+            amount = new BigDecimal(amountRaw);
+        } catch (NumberFormatException e) {
+             error("Amount must be an integer.");
+             return false;
+        }
+        if (amount.compareTo(new BigDecimal(0)) < 0) {
+            error("Amount must be >= 0.");
+            return false;
+        }
+        return true;
         // createdBy:
         // - при CREATE → currentUser (тот, кто создал)
         // - при EDIT → оставляем original createdBy (кто создал изначально), если он есть
-        String createdBy = (mode == FormMode.EDIT && existing != null && trimToNull(existing.createdBy()) != null)
-                ? existing.createdBy()
-                : currentUser;
-
-        return new TransactionPayload(
-                id,
-                newTimestamp,
-                type,
-                createdBy,
-                initiator,
-                target,
-                amount
-        );
     }
 
-    private TransactionPayload error(String message) {
+    private void error(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);
         errorLabel.setManaged(true);
-        return null;
     }
 
     private void clearError() {
@@ -210,13 +231,11 @@ public class TransactionFormController {
         // createdBy показываем:
         // - EDIT: original creator (если есть)
         // - CREATE: current user
-        String createdByToShow = (isEdit && existing != null && trimToNull(existing.createdBy()) != null)
-                ? existing.createdBy()
-                : currentUser;
-        createdByLabel.setText(createdByToShow);
+
+        createdByLabel.setText(authService.getNameFromToken(App.get().getToken()));
 
         // submit button text by role
-        submitBtn.setText(role == Role.LEADER ? "Submit and approve" : "Submit");
+        submitBtn.setText(authService.getRoleFromToken(App.get().getToken()) == Role.LEADER ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {
@@ -224,7 +243,7 @@ public class TransactionFormController {
                 TransactionType.PURCHASE,
                 TransactionType.SELL,
                 TransactionType.GRANT,
-                TransactionType.DIVIDEND
+                TransactionType.DIVIDENT
         );
 
         typeCombo.setConverter(new StringConverter<>() {
@@ -246,25 +265,6 @@ public class TransactionFormController {
 
     public enum FormMode { CREATE, EDIT }
 
-    public enum TransactionType {
-        PURCHASE, SELL, GRANT, DIVIDEND
-    }
-
-    /**
-     * То, что уходит наружу на save/submit.
-     * timestamp всегда now() на момент сохранения.
-     * id = null для CREATE, id != null для EDIT.
-     */
-    public record TransactionPayload(
-            String id,
-            LocalDateTime timestamp,
-            TransactionType type,
-            String createdBy,
-            String initiator,
-            String target,
-            int amount
-    ) {}
-
     /**
      * Это то, что приходит из списка (existingData).
      * Ты можешь заменить на свой реальный класс Transaction.
@@ -281,8 +281,8 @@ public class TransactionFormController {
 
     public interface Actions {
         void onCancel();
-        void onSaveDraft(TransactionPayload data);
-        void onSubmit(TransactionPayload data, boolean approveImmediately);
+        void onSaveDraft();
+        void onSubmit(boolean approveImmediately);
     }
 
     private static String trimToNull(String s) {

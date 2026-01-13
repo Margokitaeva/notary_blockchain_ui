@@ -76,7 +76,7 @@
             <TableView fx:id="table" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="colTime" prefWidth="140" text="Time" />
-                    <TableColumn fx:id="colId" prefWidth="80" text="ID" />
+<!--                    <TableColumn fx:id="colId" prefWidth="80" text="ID" />-->
 
                     <!-- only visible in MY_SUBMITTED mode -->
 <!--                    <TableColumn fx:id="colStatus" prefWidth="120" text="Status" />-->
