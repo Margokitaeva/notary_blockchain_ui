@@ -1,6 +1,8 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.*;
 import jakarta.annotation.PostConstruct;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -20,9 +22,12 @@ import org.springframework.beans.factory.annotation.Value;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+
+import static org.apache.logging.log4j.util.Strings.trimToNull;
 
 @Component
 public class TransactionsListController {
@@ -33,14 +38,12 @@ public class TransactionsListController {
     @FXML private TextField filterTarget;
 
     @FXML private ComboBox<TypeFilterItem> filterType;
-//    @FXML private ComboBox<StatusFilterItem> filterStatus; // visible only in MY_SUBMITTED
 
     // ===== TABLE =====
     @FXML private TableView<TransactionRowVM> table;
 
     @FXML private TableColumn<TransactionRowVM, String> colTime;
 //    @FXML private TableColumn<TransactionRowVM, Number> colId;
-//    @FXML private TableColumn<TransactionRowVM, String> colStatus; // only MY_SUBMITTED
     @FXML private TableColumn<TransactionRowVM, String> colType;
     @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
     @FXML private TableColumn<TransactionRowVM, String> colInitiator;
@@ -56,11 +59,8 @@ public class TransactionsListController {
     // ===== DETAILS =====
     @FXML private Label detailsHint;
 
-    @FXML private Label detailsId;
+//    @FXML private Label detailsId;
     @FXML private Label detailsTime;
-
-//    @FXML private Label detailsStatusLabel;
-//    @FXML private Label detailsStatus;
 
     @FXML private Label detailsType;
     @FXML private Label detailsCreatedBy;
@@ -82,10 +82,6 @@ public class TransactionsListController {
 
     @Value("${ui.pageSize}")
     private int PAGE_SIZE;
-    @Value("${ui.txPerBlock}")
-    private int TX_PER_BLOCK;
-
-    private int BLOCKS_PER_PAGE;
 
     private int currentPage = 0;
     private final ObservableList<TransactionRowVM> pageTransactions = FXCollections.observableArrayList();
@@ -100,11 +96,11 @@ public class TransactionsListController {
     private Mode mode = Mode.APPROVED;
 
     private Actions actions = new Actions() {
-        @Override public void onEdit(TransactionRowVM tx) { System.out.println("Edit: " + tx.id()); }
-        @Override public void onDelete(TransactionRowVM tx) { System.out.println("Delete: " + tx.id()); }
-        @Override public void onApprove(TransactionRowVM tx) { System.out.println("Approve: " + tx.id()); }
-        @Override public void onDecline(TransactionRowVM tx) { System.out.println("Decline: " + tx.id()); }
-        @Override public void onResubmit(TransactionRowVM tx) { System.out.println("Resubmit: " + tx.id()); }
+        @Override public void onEdit(TransactionRowVM tx) { System.out.println("Edit: ");}
+        @Override public void onDelete() { System.out.println("Delete: "); }
+        @Override public void onApprove() { System.out.println("Approve: "); }
+        @Override public void onDecline() { System.out.println("Decline: "); }
+        @Override public void onResubmit() { System.out.println("Resubmit: "); }
     };
 
     private static final DateTimeFormatter TIME_FMT =
@@ -114,16 +110,12 @@ public class TransactionsListController {
 
     // ================== MODULES ==================
     private AuthService authService;
-
+    private BlockchainService blockchainService;
     // ================== PUBLIC API ==================
 
-    TransactionsListController(AuthService authService){
+    TransactionsListController(AuthService authService, BlockchainService blockchainService){
         this.authService = authService;
-    }
-
-    @PostConstruct
-    private void init(){
-        BLOCKS_PER_PAGE = PAGE_SIZE / TX_PER_BLOCK;
+        this.blockchainService = blockchainService;
     }
 
     public void setItems(ObservableList<TransactionRowVM> items) {
@@ -155,13 +147,11 @@ public class TransactionsListController {
         resetDetails();
         refreshActions();
 
-//        loadTransactionsFromBlocks();
         loadPage(0);
     }
 
     private void setupColumns() {
         colTime.setCellValueFactory(c -> new SimpleStringProperty(TIME_FMT.format(c.getValue().timestamp())));
-//        colStatus.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().status().name()));
 //        colId.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().id()));
         colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().type().name()));
         colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().createdBy())));
@@ -178,7 +168,6 @@ public class TransactionsListController {
         colInitiator.setSortable(true);
         colTarget.setSortable(true);
         colAmount.setSortable(true);
-//        colStatus.setSortable(false); // ты хотела статус НЕ сортировать
     }
 
     private void setupCombos() {
@@ -191,14 +180,6 @@ public class TransactionsListController {
                 TypeFilterItem.of(TransactionType.DIVIDEND)
         ));
         filterType.getSelectionModel().selectFirst();
-
-        // Status filter: ALL + SUBMITTED/DECLINED
-//        filterStatus.setItems(FXCollections.observableArrayList(
-//                StatusFilterItem.all(),
-//                StatusFilterItem.of(TxStatus.SUBMITTED),
-//                StatusFilterItem.of(TxStatus.DECLINED)
-//        ));
-//        filterStatus.getSelectionModel().selectFirst();
     }
 
     private void setupDataPipeline() {
@@ -210,8 +191,6 @@ public class TransactionsListController {
 
         table.setItems(sorted);
 
-        // hide status column by default (enabled in MY_SUBMITTED)
-//        colStatus.setVisible(false);
     }
 
     private void setupListeners() {
@@ -220,7 +199,6 @@ public class TransactionsListController {
         filterInitiator.textProperty().addListener((obs, o, n) -> reapplyFilter());
         filterTarget.textProperty().addListener((obs, o, n) -> reapplyFilter());
         filterType.valueProperty().addListener((obs, o, n) -> reapplyFilter());
-//        filterStatus.valueProperty().addListener((obs, o, n) -> reapplyFilter());
 
         // Selection -> details + buttons
         table.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
@@ -249,14 +227,6 @@ public class TransactionsListController {
             if (tx.type() != tf.type()) return false;
         }
 
-        // Status (enum) filter only in MY_SUBMITTED
-//        if (mode == Mode.MY_SUBMITTED) {
-//            StatusFilterItem sf = filterStatus.getValue();
-//            if (sf != null && sf.status() != null) {
-//                if (tx.status() != sf.status()) return false;
-//            }
-//        }
-
         // Partial text filters (case-insensitive)
         if (!containsIgnoreCase(tx.createdBy(), filterCreatedBy.getText())) return false;
         if (!containsIgnoreCase(tx.initiator(), filterInitiator.getText())) return false;
@@ -272,7 +242,6 @@ public class TransactionsListController {
         filterTarget.clear();
 
         filterType.getSelectionModel().selectFirst();
-//        filterStatus.getSelectionModel().selectFirst();
 
         reapplyFilter();
     }
@@ -281,9 +250,7 @@ public class TransactionsListController {
 
     private void resetDetails() {
         detailsHint.setText("Select a transaction from the table.");
-//        detailsId.setText("—");
         detailsTime.setText("—");
-//        detailsStatus.setText("—");
         detailsType.setText("—");
         detailsCreatedBy.setText("—");
         detailsInitiator.setText("—");
@@ -298,42 +265,15 @@ public class TransactionsListController {
         }
 
         detailsHint.setText("Selected transaction:");
-//        detailsId.setText(tx.id());
         detailsTime.setText(TIME_FMT.format(tx.timestamp()));
         detailsType.setText(tx.type().name());
         detailsCreatedBy.setText(nullToDash(tx.createdBy()));
         detailsInitiator.setText(nullToDash(tx.initiator()));
         detailsTarget.setText(nullToDash(tx.target()));
         detailsAmount.setText(String.valueOf(tx.amount()));
-
-//        if (mode == Mode.MY_SUBMITTED) {
-//            detailsStatus.setText(tx.status().name());
-//        } else {
-//            detailsStatus.setText("—");
-//        }
     }
 
     // ================== MODE UI ==================
-
-//    private void applyModeUI() {
-//        boolean showStatusUI = (mode == Mode.MY_SUBMITTED);
-
-        // Status filter combobox shown only in MY_SUBMITTED
-//        filterStatus.setVisible(showStatusUI);
-//        filterStatus.setManaged(showStatusUI);
-
-        // Status column visible only in MY_SUBMITTED
-//        colStatus.setVisible(showStatusUI);
-
-        // Status in details visible only in MY_SUBMITTED
-//        detailsStatusLabel.setVisible(showStatusUI);
-//        detailsStatusLabel.setManaged(showStatusUI);
-//        detailsStatus.setVisible(showStatusUI);
-//        detailsStatus.setManaged(showStatusUI);
-
-        // Also hide decline box when switching mode
-//        hideDeclineBox();
-//    }
 
     private void refreshActions() {
         TransactionRowVM selected = table.getSelectionModel().getSelectedItem();
@@ -361,9 +301,6 @@ public class TransactionsListController {
                 show(declineBtn);
             }
             case MY_SUBMITTED -> {
-//                if (selected.status() == TxStatus.DECLINED) {
-//
-//                }
                 // no actions
             }
             case DECLINED -> {
@@ -379,22 +316,31 @@ public class TransactionsListController {
     @FXML
     private void onEdit() {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
+
         if (tx == null) return;
+
         actions.onEdit(tx);
     }
 
     @FXML
     private void onDelete() {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
+
         if (tx == null) return;
-        actions.onDelete(tx);
+        if (!(tx.status == TransactionStatus.DRAFT || tx.status == TransactionStatus.DECLINED)) return;
+
+        blockchainService.deleteTransaction(tx.id());
+        // TODO: уведомление об удалении ???
+        actions.onDelete();
     }
 
     @FXML
     private void onApprove() {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
-        actions.onApprove(tx);
+        blockchainService.approve(tx.id());
+        // TODO: уведомление о approve ???
+        actions.onApprove();
     }
 
     @FXML
@@ -406,7 +352,9 @@ public class TransactionsListController {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
 
-        actions.onDecline(tx);
+        blockchainService.decline(tx.id());
+        // // TODO: уведомление о decline ???
+        actions.onDecline();
     }
 
 //    @FXML
@@ -425,7 +373,9 @@ public class TransactionsListController {
     private void onResubmit() {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
-        actions.onResubmit(tx);
+        blockchainService.submitTransaction(tx.id());
+        // TODO: уведомление о submit ???
+        actions.onResubmit();
     }
 
 //    private void hideDeclineBox() {
@@ -461,38 +411,46 @@ public class TransactionsListController {
     // ================== PAGINATION ==================
 
     private void loadPage(int page) {
-        int fromBlock = page * BLOCKS_PER_PAGE;
-        int blockCount = BLOCKS_PER_PAGE;
+//        int fromBlock = page * BLOCKS_PER_PAGE;
+//        int blockCount = BLOCKS_PER_PAGE;
 
-        // TODO: get blockCount number of blocks (instead of fetchBlocksFromServer), use this.Mode
-        // TODO: нету репо связанного с транзакциями
+        // TODO: подключить функцию - вроде уже подключено, но если поменяется то поменять
         // mode APPROVED = transaction status APPROVED
         // mode DRAFTS = transaction status DRAFT for current user - i guess you dont have it in this file do you need to add ??
         // mode PENDING = transaction status SUBMITTED any user
         // mode MY_SUBMITTED = transaction status SUBMITTED (same as above) DECLINED for current user - i guess you dont have it in this file do you need to add ??
 
-        List<BlockEntity> blocks = blockchain.getBlocks(fromBlock, blockCount);
 
         pageTransactions.clear();
 
-        for (BlockEntity block : blocks) {
-            for (TransactionEntity tx : block.getTransactions()) {
-                pageTransactions.add(new TransactionRowVM(tx));
-            }
+        List<TransactionEntity> txs = new ArrayList<>();
+        if (mode == Mode.APPROVED) {
+            // call function to get list of transactions APPROVED txs = function
+        }
+        else {
+            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), authService.getNameFromToken(App.get().getToken()));
+
         }
 
+        pageTransactions.setAll(txs.stream().map(TransactionRowVM::new).toList());
+
         currentPage = page;
-        updateTable();
-        updatePagination();
+        updateAll();
     }
 
     private int getPageCount() {
-        // number of pages = number of blocks * 5 / PAGE_SIZE
-        // если есть у Кати переменная,в  которой написано сколько транзакций в блоке, то можно вместо 5 вписать эту переменную
-        // либо если мы планируем сделать много транзакций в блоке потом то тогда надо делать пересчет чтобы одномоментно было 15-20 транзакций отображено
+        String username = authService.getNameFromToken(App.get().getToken());
+        int total;
+        switch (mode) {
+            case APPROVED -> total = blockchainService.totalApproved();
+            case DRAFTS -> total = blockchainService.totalDraft(username);
+            case PENDING -> total = blockchainService.totalSubmitted();
+            case MY_SUBMITTED -> total = blockchainService.totalSubmitted(username);
+            case DECLINED -> total = blockchainService.totalDeclined(username);
+            default -> total = 0;
+        }
 
-        long totalBlocks = blockchain.getChainSize();
-        return (int) Math.ceil((double) totalBlocks / BLOCKS_PER_PAGE);
+        return (int) Math.ceil((double) total / PAGE_SIZE);
     }
 
     private void updateTable() {
@@ -518,8 +476,6 @@ public class TransactionsListController {
         prev.setDisable(currentPage == 0);
         prev.setOnAction(e -> {
             loadPage(currentPage - 1);
-//            currentPage--;
-//            updateAll();
         });
         box.getChildren().add(prev);
 
@@ -531,8 +487,6 @@ public class TransactionsListController {
                 btn.setDisable(i == currentPage);
                 btn.setOnAction(e -> {
                     loadPage(pageIndex);
-//                    currentPage = pageIndex;
-//                    updateAll();
                 });
 
                 box.getChildren().add(btn);
@@ -546,8 +500,6 @@ public class TransactionsListController {
         next.setDisable(currentPage >= pageCount - 1);
         next.setOnAction(e -> {
             loadPage(currentPage + 1);
-//            currentPage++;
-//            updateAll();
         });
         box.getChildren().add(next);
     }
@@ -571,6 +523,16 @@ public class TransactionsListController {
         MY_SUBMITTED,
         DECLINED
     }
+
+    private TransactionStatus resolveStatus() {
+        return switch (mode) {
+            case APPROVED -> TransactionStatus.APPROVED;
+            case PENDING -> TransactionStatus.SUBMITTED;
+            case DRAFTS -> TransactionStatus.DRAFT;
+            case DECLINED -> TransactionStatus.DECLINED;
+            case MY_SUBMITTED -> TransactionStatus.SUBMITTED;
+        };
+    }
     
     public record TypeFilterItem(TransactionType type, String label) {
         public static TypeFilterItem all() { return new TypeFilterItem(null, "All"); }
@@ -578,18 +540,12 @@ public class TransactionsListController {
         @Override public String toString() { return label; }
     }
 
-//    public record StatusFilterItem(TransactionStatus status, String label) {
-//        public static StatusFilterItem all() { return new StatusFilterItem(null, "All"); }
-//        public static StatusFilterItem of(TransactionStatus s) { return new StatusFilterItem(s, s.name()); }
-//        @Override public String toString() { return label; }
-//    }
-
     public interface Actions {
         void onEdit(TransactionRowVM tx);
-        void onDelete(TransactionRowVM tx);
-        void onApprove(TransactionRowVM tx);
-        void onDecline(TransactionRowVM tx);
-        void onResubmit(TransactionRowVM tx);
+        void onDelete();
+        void onApprove();
+        void onDecline();
+        void onResubmit();
     }
 
     public static final class  TransactionRowVM {

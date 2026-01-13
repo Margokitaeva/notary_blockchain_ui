@@ -104,8 +104,8 @@
             <Label fx:id="detailsHint" styleClass="tx-hint" text="Select a transaction from the table." />
 
             <VBox spacing="8">
-                <Label styleClass="tx-field-label" text="ID" />
-                <Label fx:id="detailsId" styleClass="tx-field-value" text="—" />
+<!--                <Label styleClass="tx-field-label" text="ID" />-->
+<!--                <Label fx:id="detailsId" styleClass="tx-field-value" text="—" />-->
 
                 <Label styleClass="tx-field-label" text="Time" />
                 <Label fx:id="detailsTime" styleClass="tx-field-value" text="—" />
