@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
-    id       TEXT PRIMARY KEY AUTOINCREMENT,
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
     type        TEXT,
     payload     TEXT,
     created_by  TEXT,

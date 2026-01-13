@@ -147,7 +147,7 @@ public class TransactionFormController {
                     TransactionStatus.DRAFT
 
             );
-            txId = blockchainService.addDraft(tx);
+            long txId = blockchainService.addDraft(tx);
             blockchainService.submitTransaction(txId);
 
             approveImmediately = false;
