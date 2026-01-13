@@ -1,11 +1,13 @@
 package com.dp.notary.blockchain.api;
 
-import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.PendingActionResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
 import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
+import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
+import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,40 +23,27 @@ import java.util.List;
 @RequestMapping("/api")
 public class BlockchainController {
 
-    private final BlockchainService svc;
+    private final BlockchainService blockchain;
 
     public BlockchainController(BlockchainService svc) {
-        this.svc = svc;
-    }
-
-    @GetMapping("/status")
-    public NodeStatusResponse status() {
-        return svc.status();
+        this.blockchain = svc;
     }
 
     @GetMapping("/blocks")
-    public List<BlockEntity> blocks(@RequestParam(name = "fromHeight", defaultValue = "0") long fromHeight) {
-        return svc.getBlocks(fromHeight,500);
+        public List<BlockEntity> blocks(@RequestParam(name = "fromHeight", defaultValue = "0") long fromHeight) {
+        return blockchain.getBlocks(fromHeight,500);
     }
 
     @PostMapping("/acts")
     public SubmitActResponse submit(@RequestBody SubmitActRequest req) {
-        return svc.submitAct(req);
-    }
-
-    @PostMapping("/pending/approve")
-    public PendingActionResponse approve(@RequestParam("txId") String txId) {
-        boolean updated = svc.approvePending(txId);
-        if (!updated) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pending transaction not found");
-        }
-        return new PendingActionResponse(txId, "APPROVED");
-    }
-
-    @PostMapping("/pending/decline")
-    public PendingActionResponse decline(@RequestParam("txId") String txId) {
-        var declined = svc.declinePending(txId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pending transaction not found"));
-        return new PendingActionResponse(declined.getTxId(), "DECLINED");
+        TransactionEntity tx = new TransactionEntity(
+                0,
+                TransactionType.valueOf(req.type()),
+                req.payload(),
+                req.createdBy(),
+                TransactionStatus.DRAFT
+        );
+        long id = blockchain.addDraft(tx);
+        return new SubmitActResponse(Long.toString(id),"хуй");
     }
 }

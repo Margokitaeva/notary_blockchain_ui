@@ -27,8 +27,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     target      TEXT,
     owner_id    TEXT,
     owner_name  TEXT,
-    owner_surname TEXT,
-    PRIMARY KEY (tx_id, scope)
+    owner_surname TEXT
 );
 
 

@@ -4,6 +4,8 @@ import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
 import com.dp.notary.blockchain.api.dto.SubmitActRequest;
 import com.dp.notary.blockchain.api.dto.SubmitActResponse;
 import com.dp.notary.blockchain.blockchain.model.BlockEntity;
+import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
+import com.dp.notary.blockchain.config.NotaryProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -12,10 +14,13 @@ import java.util.List;
 @Component
 public class HttpLeaderClient implements LeaderClient {
 
-    private final RestClient rest;
 
-    public HttpLeaderClient(RestClient.Builder builder) {
-        this.rest = builder.baseUrl(props.leaderUrl()).build();
+    private final RestClient rest;
+    private final NotaryProperties props;
+
+    public HttpLeaderClient(RestClient.Builder builder, NotaryProperties props) {
+        this.props = props;
+        this.rest = builder.baseUrl(this.props.leaderUrl()).build();
     }
 
     @Override
@@ -28,14 +33,6 @@ public class HttpLeaderClient implements LeaderClient {
     }
 
     @Override
-    public NodeStatusResponse getStatus() {
-        return rest.get()
-                .uri("/api/status")
-                .retrieve()
-                .body(NodeStatusResponse.class);
-    }
-
-    @Override
     public List<BlockEntity> getBlocks(long fromHeight) {
         BlockEntity[] arr = rest.get()
                 .uri(uriBuilder -> uriBuilder.path("/api/blocks").queryParam("fromHeight", fromHeight).build())
@@ -45,11 +42,11 @@ public class HttpLeaderClient implements LeaderClient {
     }
 
     @Override
-    public List<Transaction> getLeaderDrafts() {
-        Transaction[] arr = rest.get()
+    public List<TransactionEntity> getLeaderDrafts() {
+        TransactionEntity[] arr = rest.get()
                 .uri("/api/queues/drafts/leader")
                 .retrieve()
-                .body(Transaction[].class);
+                .body(TransactionEntity[].class);
         return arr == null ? List.of() : List.of(arr);
     }
 }

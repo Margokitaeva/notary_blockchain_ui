@@ -4,13 +4,16 @@ import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class SqliteTransactionStateRepository implements TransactionStateRepository {
@@ -41,29 +44,42 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
-    public void delete(int txId) {
+    public void delete(long txId) {
         int deleted = jdbc.update(
                 "DELETE FROM transactions WHERE tx_id = ?",
                 txId
         );
     }
     @Override
-    public void insert(TransactionEntity tx) {
-        jdbc.update(
-                """
-                INSERT INTO transactions(tx_id, type, payload, created_by, status)
-                VALUES(?,?,?,?,?)
-                """,
-                tx.getTxId(),
-                tx.getType(),
-                tx.getPayload(),
-                tx.getCreatedBy(),
-                tx.getStatus()
-        );
+    public long insert(TransactionEntity tx) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbc.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(
+                    """
+                    INSERT INTO transactions(type, payload, created_by, status)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    Statement.RETURN_GENERATED_KEYS
+            );
+            ps.setString(1, tx.getType().name());
+            ps.setString(2, tx.getPayload());
+            ps.setString(3, tx.getCreatedBy());
+            ps.setString(4, tx.getStatus().toString());
+            return ps;
+        }, keyHolder);
+
+        Number key = keyHolder.getKey();
+        if (key == null) {
+            throw new IllegalStateException("Failed to retrieve generated id");
+        }
+
+        return key.longValue();
     }
 
+
     @Override
-    public boolean updateStatus(int txId, TransactionStatus status) {
+    public boolean updateStatus(long txId, TransactionStatus status) {
         int updated = jdbc.update(
                 "UPDATE transactions SET status = ? WHERE tx_id = ?",
                 status.name(), txId
@@ -98,7 +114,7 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
-    public Optional<TransactionEntity> find(int txId) {
+    public Optional<TransactionEntity> find(long txId) {
         var rows = jdbc.query(
                 "SELECT tx_id, type, payload, created_by, status FROM transactions WHERE tx_id = ?",
                 this::mapRow, txId

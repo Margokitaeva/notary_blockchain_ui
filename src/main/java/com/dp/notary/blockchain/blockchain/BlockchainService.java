@@ -30,9 +30,9 @@ public class BlockchainService {
         createGenesisBlock();
     }
 
-    public void addDraft(TransactionEntity tx) {
+    public long addDraft(TransactionEntity tx) {
         tx.setStatus(TransactionStatus.DRAFT);
-        txRepo.insert(tx);
+        return txRepo.insert(tx);
     }
 
     public void editDraft(TransactionEntity tx) {
@@ -46,7 +46,7 @@ public class BlockchainService {
         txRepo.update(tx);
     }
 
-    public void deleteTransaction(int txId) {
+    public void deleteTransaction(long txId) {
         TransactionEntity tx = txRepo.find(txId)
                 .orElseThrow(() -> new IllegalStateException("Transaction not found"));
 
@@ -57,20 +57,21 @@ public class BlockchainService {
         txRepo.delete(txId);
     }
 
-    public void submitTransaction(int txId) {
+    public void submitTransaction(long txId) {
         updateStatusStrict(txId, TransactionStatus.DRAFT, TransactionStatus.SUBMITTED);
     }
 
-    public void approve(int txId) {
+    public void approve(long txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.APPROVED);
+        this.createGenesisBlock();
     }
 
-    public void decline(int txId) {
+    public void decline(long txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.DECLINED);
     }
 
     private void updateStatusStrict(
-            int txId,
+            long txId,
             TransactionStatus from,
             TransactionStatus to
     ) {
@@ -205,6 +206,14 @@ public class BlockchainService {
         block.getTransactions().forEach(txId ->
                 txRepo.updateStatus(txId, TransactionStatus.SEALED)
         );
+    }
+
+    public List<BlockEntity> getBlocks(long from,int limit){
+        return blockRepo.findFromHeight(from,limit);
+    }
+
+    public long getHeight(){
+        return blockRepo.getHeight();
     }
 
 
