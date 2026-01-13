@@ -28,6 +28,7 @@ public class MainController {
     // ===== MENU (role-based) =====
     @FXML private Button pendingBtn;     // leader only
     @FXML private Button submittedBtn;   // replica only
+    @FXML private Button declinedBtn;
 
     // ===== CENTER PLACEHOLDER =====
     @FXML private VBox contentRoot;
@@ -112,7 +113,7 @@ public class MainController {
 
     @FXML
     private void onTransactions() {
-        setPageTitle("Transactions");
+//        setPageTitle("Transactions");
 
         openTransactions(TransactionsListController.Mode.APPROVED);
 
@@ -128,7 +129,7 @@ public class MainController {
 
     @FXML
     private void onDrafts() {
-        setPageTitle("Drafts");
+//        setPageTitle("Drafts");
 
         openTransactions(TransactionsListController.Mode.DRAFTS);
 
@@ -136,16 +137,23 @@ public class MainController {
 
     @FXML
     private void onPending() {
-        setPageTitle("Pending Transactions");
+//        setPageTitle("Pending Transactions");
 
         openTransactions(TransactionsListController.Mode.PENDING);
     }
 
     @FXML
     private void onSubmitted() {
-        setPageTitle("My Submitted Transactions");
+//        setPageTitle("My Submitted Transactions");
 
         openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
+    }
+
+    @FXML
+    private void onDeclined() {
+//        setPageTitle("My Declined Transactions");
+
+        openTransactions(TransactionsListController.Mode.DECLINED);
     }
 
     @FXML
@@ -199,15 +207,16 @@ public class MainController {
 
                 @Override
                 public void onSaveDraft() {
-                    // TODO: api.saveDraft(data)
-
                     openTransactions(TransactionsListController.Mode.DRAFTS);
                 }
 
                 @Override
-                public void onSubmit(TransactionFormController.TransactionPayload data, boolean approveImmediately) {
-                    // TODO: api.submit(data, approveImmediately)
-                    openTransactions(TransactionsListController.Mode.PENDING);
+                public void onSubmit(boolean approveImmediately) {
+                    if (approveImmediately) {
+                        openTransactions(TransactionsListController.Mode.APPROVED);
+                    } else {
+                        openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
+                    }
                 }
             });
         });
@@ -219,9 +228,10 @@ public class MainController {
 
         setPageTitle(
                 switch (mode) {
-                    case PENDING -> "Pending";
+                    case PENDING -> "Pending transactions";
                     case DRAFTS -> "Drafts";
-                    case MY_SUBMITTED -> "My submitted";
+                    case MY_SUBMITTED -> "My submitted transactions";
+                    case DECLINED -> "My declined transactions";
                     default -> "Dashboard";
                 }
         );
@@ -237,26 +247,22 @@ public class MainController {
                 }
 
                 @Override
-                public void onDelete(TransactionsListController.TransactionRowVM tx) {
-                    // TODO: api.delete(tx.id())
+                public void onDelete() {
                     openTransactions(mode);
                 }
 
                 @Override
-                public void onApprove(TransactionsListController.TransactionRowVM tx) {
-                    // TODO: api.approve(tx.id())
+                public void onApprove() {
                     openTransactions(mode);
                 }
 
                 @Override
-                public void onDecline(TransactionsListController.TransactionRowVM tx) {
-                    // TODO: api.decline(tx.id())
+                public void onDecline() {
                     openTransactions(mode);
                 }
 
                 @Override
-                public void onResubmit(TransactionsListController.TransactionRowVM tx) {
-                    // TODO: api.resubmit(tx.id())
+                public void onResubmit() {
                     openTransactions(mode);
                 }
             });
@@ -270,7 +276,6 @@ public class MainController {
             TransactionFormController f = (TransactionFormController) controller;
 
             f.setMode(TransactionFormController.FormMode.EDIT);
-            f.
             // ВАЖНО:
             // Сейчас твой TransactionFormController ожидает СВОЙ TransactionVM record.
             // Самый простой путь — сделать маппинг:
@@ -302,20 +307,11 @@ public class MainController {
 
                 @Override
                 public void onSubmit(boolean approveImmediately) {
-                    // TODO: api.updateAndSubmit(data, approveImmediately)
-//                  // TODO: тут реальный вызов API
-                    //    // если approveImmediately=true -> submit+approve
-                    //    // иначе -> submit в pending
-                    //
                     if (approveImmediately) {
-                        // лидер: сразу approved (или куда ты показываешь approved)
                         openTransactions(TransactionsListController.Mode.APPROVED);
-                        // или другой режим/вкладка если у тебя есть "Approved"
                     } else {
-                        // реплика: уходит на ожидание
                         openTransactions(TransactionsListController.Mode.MY_SUBMITTED);
                     }
-//                    openTransactions(TransactionsListController.Mode.PENDING);
                 }
             });
         });

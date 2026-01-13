@@ -1,1 +1,8 @@
 # notary_blockchain_ui
+
+TO DO:
+- [ ] вынести фильтрацию из фронта
+- [ ] внести фильтрацию в бэк
+- [x] сделать нормальное запрашивание транзакций в TransactionsListController (не по блокам)
+- [x] перенести результат действия кнопок из MainController в TransactionsListController
+- [x] переделать чтобы во фронте amount мог быть double

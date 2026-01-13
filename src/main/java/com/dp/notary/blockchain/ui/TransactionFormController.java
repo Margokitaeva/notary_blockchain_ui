@@ -40,6 +40,8 @@ public class TransactionFormController {
     private final AuthService authService;
     private final BlockchainService blockchainService;
 
+    private BigDecimal parsedAmount;
+
     // ===== MODE =====
     private FormMode mode = FormMode.CREATE;
 
@@ -53,7 +55,7 @@ public class TransactionFormController {
         @Override public void onCancel() { System.out.println("Cancel"); }
         @Override public void onSaveDraft() { System.out.println("Save draft"); }
         @Override public void onSubmit(boolean approveImmediately) {
-            System.out.println("Submit approve=" + approveImmediately);
+            System.out.println("Submit approve");
         }
     };
 
@@ -113,40 +115,58 @@ public class TransactionFormController {
     private void onSaveDraft() {
         clearError();
         if (buildAndValidatePayload()){
+            TransactionEntity tx = new TransactionEntity(
+                    0,
+                    typeCombo.getValue(),
+                    trimToNull(targetField.getText())+trimToNull(parsedAmount.toPlainString())+trimToNull(initiatorField.getText()),
+                    authService.getNameFromToken(App.get().getToken()),
+                    TransactionStatus.DRAFT
+            );
+            blockchainService.addDraft(tx);
+
             if(Objects.equals(App.get().getAppRole(), "LEADER")){
-                TransactionEntity tx = new TransactionEntity(
-                        0,
-                        typeCombo.getValue(),
-                        trimToNull(targetField.getText())+trimToNull(amountField.getText())+trimToNull(initiatorField.getText()),
-                        authService.getNameFromToken(App.get().getToken()),
-                        TransactionStatus.DRAFT
-                );
-                blockchainService.addDraft(tx);
-                actions.onSaveDraft();
                 //TODO:рассылка всем что новый драфт
             }
-            else{
+            else {
                 //TODO:отправка черновика лидеру
-                actions.onSaveDraft();;
             }
+            actions.onSaveDraft();
         }
 
     }
 
     @FXML
-    private void onSubmit() {
+    private void onSubmit(boolean approveImmediately) {
         clearError();
         if (buildAndValidatePayload()) {
+            TransactionEntity tx = new TransactionEntity(
+                    0,
+                    typeCombo.getValue(),
+                    trimToNull(targetField.getText())+trimToNull(parsedAmount.toPlainString())+trimToNull(initiatorField.getText()),
+                    authService.getNameFromToken(App.get().getToken()),
+                    TransactionStatus.DRAFT
+
+            );
+            txId = blockchainService.addDraft(tx);
+            blockchainService.submitTransaction(txId);
+
+            approveImmediately = false;
+
             if(Objects.equals(App.get().getAppRole(), "LEADER")){
-
-                    if(authService.getRoleFromToken(App.get().getToken()) == Role.LEADER){
-
-                    }
+                if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER){
+                    approveImmediately = true;
+                    blockchainService.approve(txId);
+                    // TODO: рассылка всем что новый approve
+                }
+            }
+            else {
+                // TODO: уведомить лидера что новый submit
             }
 
 
+            // create draft -> change status submit -> approve
+            // replica: draft -> change status sbumit
 
-            boolean approveImmediately = ();
             actions.onSubmit(approveImmediately);
         }
     }
@@ -189,12 +209,12 @@ public class TransactionFormController {
         BigDecimal amount = new BigDecimal(-1);
 
         try {
-            amount = new BigDecimal(amountRaw);
+            parsedAmount = new BigDecimal(amountRaw);
         } catch (NumberFormatException e) {
-             error("Amount must be an integer.");
+             error("Amount must be a number.");
              return false;
         }
-        if (amount.compareTo(new BigDecimal(0)) < 0) {
+        if (parsedAmount.compareTo(new BigDecimal(0)) < 0) {
             error("Amount must be >= 0.");
             return false;
         }
@@ -243,7 +263,7 @@ public class TransactionFormController {
                 TransactionType.PURCHASE,
                 TransactionType.SELL,
                 TransactionType.GRANT,
-                TransactionType.DIVIDENT
+                TransactionType.DIVIDEND
         );
 
         typeCombo.setConverter(new StringConverter<>() {
@@ -255,8 +275,13 @@ public class TransactionFormController {
     private void setupAmountField() {
         amountField.textProperty().addListener((obs, oldV, newV) -> {
             if (newV == null) return;
-            if (!newV.matches("\\d*")) {
-                amountField.setText(newV.replaceAll("[^\\d]", ""));
+
+            String normalized = newV.replace(',', '.');
+
+            if (!normalized.matches("\\d*(\\.\\d*)?")) {
+                amountField.setText(oldV);
+            } else if (!normalized.equals(newV)) {
+                amountField.setText(normalized);
             }
         });
     }
@@ -270,7 +295,7 @@ public class TransactionFormController {
      * Ты можешь заменить на свой реальный класс Transaction.
      */
     public record TransactionFormVM(
-            String id,
+            Integer id,
             LocalDateTime timestamp,
             TransactionType type,
             String createdBy,

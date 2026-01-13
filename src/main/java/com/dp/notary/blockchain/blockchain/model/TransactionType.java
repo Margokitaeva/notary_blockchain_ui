@@ -3,7 +3,7 @@ package com.dp.notary.blockchain.blockchain.model;
 public enum TransactionType {
     PURCHASE,
     GRANT,
-    DIVIDENT,
+    DIVIDEND,
     SELL;
 
     public static TransactionType fromString(String value) {
