@@ -57,7 +57,11 @@ public class MainController {
         roleLabel.setText("Role: " + role.displayName());
 
         pendingBtn.setVisible(role == Role.LEADER);
+        pendingBtn.setManaged(role == Role.LEADER);
         submittedBtn.setVisible(role == Role.REPLICA);
+        submittedBtn.setManaged(role == Role.REPLICA);
+        declinedBtn.setVisible(role == Role.REPLICA);
+        declinedBtn.setManaged(role == Role.REPLICA);
     }
 
     public void setPageTitle(String title) {
@@ -174,8 +178,10 @@ public class MainController {
     }
 
     private void loadIntoContent(String fxmlResourcePath, Consumer<Object> controllerInit) {
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlResourcePath));
+            loader.setControllerFactory(App.get().getSpringContext()::getBean);
             Node root = loader.load();
 
             Object controller = loader.getController();

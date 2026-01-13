@@ -50,6 +50,10 @@ public class TransactionFormController {
     // ВАЖНО: при сохранении мы делаем новый timestamp = now()
     private TransactionFormVM existing; // можешь заменить на свой доменный Transaction
 
+//    public TransactionFormController() {
+////         ОБЯЗАТЕЛЬНО
+//    }
+
     // ===== CALLBACKS =====
     private Actions actions = new Actions() {
         @Override public void onCancel() { System.out.println("Cancel"); }
@@ -136,7 +140,7 @@ public class TransactionFormController {
     }
 
     @FXML
-    private void onSubmit(boolean approveImmediately) {
+    private void onSubmit() {
         clearError();
         if (buildAndValidatePayload()) {
             TransactionEntity tx = new TransactionEntity(
@@ -150,7 +154,7 @@ public class TransactionFormController {
             long txId = blockchainService.addDraft(tx);
             blockchainService.submitTransaction(txId);
 
-            approveImmediately = false;
+            boolean approveImmediately = false;
 
             if(Objects.equals(App.get().getAppRole(), "LEADER")){
                 if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER){

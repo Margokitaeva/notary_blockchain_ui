@@ -34,12 +34,12 @@
                     styleClass="nav-btn"/>
 
             <Button fx:id="submittedBtn"
-                    text="My Submitted Transactions"
+                    text="Submitted Transactions"
                     onAction="#onSubmitted"
                     styleClass="nav-btn"/>
 
             <Button fx:id="declinedBtn"
-                    text="My Declined Transactions"
+                    text="Declined Transactions"
                     onAction="#onDeclined"
                     styleClass="nav-btn"/>
 

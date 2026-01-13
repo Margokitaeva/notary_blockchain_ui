@@ -21,6 +21,7 @@ public class App extends Application {
 
     private static App instance;
     private Stage stage;
+    @Getter
     private ConfigurableApplicationContext springContext;
     // размеры окна для auth
     private static final double AUTH_W = 420;
