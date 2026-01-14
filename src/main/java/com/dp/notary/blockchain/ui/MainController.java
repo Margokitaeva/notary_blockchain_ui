@@ -2,6 +2,7 @@ package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +21,7 @@ import java.time.ZoneId;
 @Component
 public class MainController {
 
+    private final BlockchainService blockchainService;
     // ===== HEADER =====
     @FXML private Label pageTitle;
     @FXML private Label userNameLabel;
@@ -38,8 +40,9 @@ public class MainController {
 
     private final AuthService authService;
 
-    public MainController(AuthService authService) {
+    public MainController(AuthService authService, BlockchainService blockchainService) {
         this.authService = authService;
+        this.blockchainService = blockchainService;
     }
 
     // ===== INIT =====
@@ -75,43 +78,37 @@ public class MainController {
         setPageTitle("Dashboard");
         clearContent(); // comment this
         // TODO: uncomment everything below when connect to existing functions
-//        loadIntoContent("/fxml/DashboardView.fxml", controller -> {
-//            DashboardController c = (DashboardController) controller;
-//
-//            // TODO get current company (send only String name)
-//            c.setCompany(new DashboardController.CompanyVM(
-//                    /* company.getName() */
-//            ));
-//
+        loadIntoContent("/fxml/DashboardView.fxml", controller -> {
+            DashboardController c = (DashboardController) controller;
+
+            c.setCompany(new DashboardController.CompanyVM("H&P.Co"));
+
 //            // TODO ledger state -> shares per owner
 //            c.setSharesData(
 //                    /* List<OwnerSharesVM> */,
 //                    /* totalShares */
 //            );
-//
-//            // TODO int number of: total number transactions, pending number transactions,
-//            //  drafts per user number transactions
-//            if (currentRole == Role.LEADER) {
-//                c.configureForLeader(
-//                        new DashboardController.LeaderStatsVM(
-//                                /* total */,
-//                                /* pending */,
-//                                /* drafts */
-//                        )
-//                );
-//            } else {
-//                // TODO int number of: total number transactions, submitted number transactions,
-//                //  drafts per user number transactions, declined per user number transactions
-//                c.configureForReplica(
-//                        new DashboardController.ReplicaStatsVM(
-//                                /* total */,
-//                                /* submitted */,
-//                                /* drafts */,
-//                                /* declined */
-//                        )
-//                );
-//            }
-//        });
+
+            if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER) {
+                c.configureForLeader(
+                        new DashboardController.LeaderStatsVM(
+                                blockchainService.totalApproved(),
+                                blockchainService.totalSubmitted(),
+                                blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()))
+                        )
+                );
+            } else {
+                String username = authService.getNameFromToken(App.get().getToken());
+                c.configureForReplica(
+                        new DashboardController.ReplicaStatsVM(
+                                blockchainService.totalApproved(username),
+                                blockchainService.totalSubmitted(username),
+                                blockchainService.totalDraft(username),
+                                blockchainService.totalDeclined(username)
+                        )
+                );
+            }
+        });
 
     }
 
