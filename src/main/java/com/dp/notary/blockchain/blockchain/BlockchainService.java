@@ -64,11 +64,14 @@ public class BlockchainService {
 
     public void approve(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.APPROVED);
-        this.createGenesisBlock();
     }
 
     public void decline(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.DECLINED);
+    }
+
+    public void seal(String txId) {
+        updateStatusStrict(txId, TransactionStatus.APPROVED, TransactionStatus.SEALED);
     }
 
     private void updateStatusStrict(
@@ -174,7 +177,8 @@ public class BlockchainService {
 
         blockRepo.append(next);
 
-        txsForBlock.forEach(tx -> txRepo.updateStatus(tx.getTxId(), TransactionStatus.SEALED));
+        txsForBlock.forEach(tx -> seal(tx.getTxId()));
+
     }
 
 
@@ -191,19 +195,16 @@ public class BlockchainService {
 
 
     public void addBlock(BlockEntity block) {
-        // Берем текущий head
+
         BlockEntity head = blockRepo.findHead()
                 .orElseThrow(() -> new IllegalStateException("No genesis block"));
 
-        // Проверяем блок
         if (!blockProcessor.validateBlock(head, block)) {
             throw new IllegalStateException("Invalid block: failed validation");
         }
 
-        // Добавляем блок в блокчейн
         blockRepo.append(block);
 
-        // Меняем статусы транзакций, которые вошли в блок на SEALED
         block.getTransactions().forEach(txId ->
                 txRepo.updateStatus(txId, TransactionStatus.SEALED)
         );
