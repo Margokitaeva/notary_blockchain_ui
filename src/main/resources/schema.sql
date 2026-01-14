@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS blocks
     time_stamp TEXT NOT NULL,
     tx_json    TEXT NOT NULL
 );
-
+INSERT OR IGNORE INTO blocks(height,prev_hash,time_stamp,tx_json)
+VALUES (0,'','','');
 CREATE TABLE IF NOT EXISTS users
 (
     name          TEXT NOT NULL UNIQUE PRIMARY KEY,
@@ -33,10 +34,3 @@ CREATE TABLE IF NOT EXISTS transactions
     initiator  TEXT REFERENCES owners (name_surname)
 );
 
-
-CREATE TABLE IF NOT EXISTS replica_draft_buffer
-(
-    client_key TEXT PRIMARY KEY,
-    payload    TEXT NOT NULL,
-    created_at TEXT
-);

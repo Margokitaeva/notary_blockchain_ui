@@ -1,6 +1,8 @@
 package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
+import com.dp.notary.blockchain.api.client.LeaderClient;
+import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.Role;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
@@ -19,25 +21,39 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
+
 @Component
 public class TransactionFormController {
 
+    private final LeaderClient leaderClient;
+    private final ReplicaClient replicaClient;
     // ===== UI =====
-    @FXML private Label formTitle;
-    @FXML private Label formSubtitle;
+    @FXML
+    private Label formTitle;
+    @FXML
+    private Label formSubtitle;
 
-    @FXML private Label createdByLabel;
+    @FXML
+    private Label createdByLabel;
 
-    @FXML private ComboBox<TransactionType> typeCombo;
-    @FXML private TextField initiatorField;
-    @FXML private TextField targetField;
-    @FXML private TextField amountField;
+    @FXML
+    private ComboBox<TransactionType> typeCombo;
+    @FXML
+    private TextField initiatorField;
+    @FXML
+    private TextField targetField;
+    @FXML
+    private TextField amountField;
 
-    @FXML private Label errorLabel;
+    @FXML
+    private Label errorLabel;
 
-    @FXML private Button cancelBtn;
-    @FXML private Button draftBtn;
-    @FXML private Button submitBtn;
+    @FXML
+    private Button cancelBtn;
+    @FXML
+    private Button draftBtn;
+    @FXML
+    private Button submitBtn;
     private final AuthService authService;
     private final BlockchainService blockchainService;
 
@@ -57,16 +73,27 @@ public class TransactionFormController {
 
     // ===== CALLBACKS =====
     private Actions actions = new Actions() {
-        @Override public void onCancel() { System.out.println("Cancel"); }
-        @Override public void onSaveDraft() { System.out.println("Save draft"); }
-        @Override public void onSubmit(boolean approveImmediately) {
+        @Override
+        public void onCancel() {
+            System.out.println("Cancel");
+        }
+
+        @Override
+        public void onSaveDraft() {
+            System.out.println("Save draft");
+        }
+
+        @Override
+        public void onSubmit(boolean approveImmediately) {
             System.out.println("Submit approve");
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService) {
+    public TransactionFormController(AuthService authService, BlockchainService blockchainService, LeaderClient leaderClient, ReplicaClient replicaClient) {
         this.authService = authService;
         this.blockchainService = blockchainService;
+        this.leaderClient = leaderClient;
+        this.replicaClient = replicaClient;
     }
 
     @FXML
@@ -119,7 +146,7 @@ public class TransactionFormController {
     @FXML
     private void onSaveDraft() {
         clearError();
-        if (buildAndValidatePayload()){
+        if (buildAndValidatePayload()) {
             TransactionEntity tx = new TransactionEntity(
                     "хуй",
                     Instant.now(),
@@ -130,13 +157,12 @@ public class TransactionFormController {
                     targetField.getText(),
                     initiatorField.getText()
             );
-            blockchainService.addDraft(tx);
 
-            if(Objects.equals(App.get().getAppRole(), "LEADER")){
-                //TODO:рассылка всем что новый драфт
-            }
-            else {
-                //TODO:отправка черновика лидеру
+            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+                blockchainService.addDraft(tx);
+                leaderClient.broadcastAddDraft(tx);
+            } else {
+                replicaClient.addDraft(tx);
             }
             actions.onSaveDraft();
         }
@@ -162,15 +188,15 @@ public class TransactionFormController {
 
             boolean approveImmediately = false;
 
-            if(Objects.equals(App.get().getAppRole(), "LEADER")){
-                if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER){
+            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+                if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER) {
                     approveImmediately = true;
                     blockchainService.approve(txId);
-                    // TODO: рассылка всем что новый approve
+                    leaderClient.broadcastSubmit(txId);
+                    leaderClient.broadcastApprove(txId);
                 }
-            }
-            else {
-                // TODO: уведомить лидера что новый submit
+            } else {
+                replicaClient.submit(txId);
             }
 
 
@@ -186,8 +212,8 @@ public class TransactionFormController {
     /**
      * Главное изменение:
      * - timestamp ставим АВТОМАТИЧЕСКИ при любом сохранении (draft/submit):
-     *   LocalDateTime.now()
-     *
+     * LocalDateTime.now()
+     * <p>
      * Для EDIT:
      * - ID берём из existing (чтобы backend понял, что обновляем)
      * Для CREATE:
@@ -199,19 +225,19 @@ public class TransactionFormController {
         String target = trimToNull(targetField.getText());
         String amountRaw = trimToNull(amountField.getText());
 
-        if (type == null){
+        if (type == null) {
             error("Type is required.");
             return false;
         }
-        if (initiator == null){
+        if (initiator == null) {
             error("Initiator is required.");
             return false;
         }
-        if (target == null){
+        if (target == null) {
             error("Target is required.");
             return false;
         }
-        if (amountRaw == null){
+        if (amountRaw == null) {
             error("Amount is required.");
             return false;
         }
@@ -221,8 +247,8 @@ public class TransactionFormController {
         try {
             parsedAmount = new BigDecimal(amountRaw);
         } catch (NumberFormatException e) {
-             error("Amount must be a number.");
-             return false;
+            error("Amount must be a number.");
+            return false;
         }
         if (parsedAmount.compareTo(new BigDecimal(0)) < 0) {
             error("Amount must be >= 0.");
@@ -277,8 +303,15 @@ public class TransactionFormController {
         );
 
         typeCombo.setConverter(new StringConverter<>() {
-            @Override public String toString(TransactionType t) { return t == null ? "" : t.name(); }
-            @Override public TransactionType fromString(String s) { return TransactionType.valueOf(s); }
+            @Override
+            public String toString(TransactionType t) {
+                return t == null ? "" : t.name();
+            }
+
+            @Override
+            public TransactionType fromString(String s) {
+                return TransactionType.valueOf(s);
+            }
         });
     }
 
@@ -298,7 +331,7 @@ public class TransactionFormController {
 
     // ================= TYPES =================
 
-    public enum FormMode { CREATE, EDIT }
+    public enum FormMode {CREATE, EDIT}
 
     /**
      * Это то, что приходит из списка (existingData).
@@ -312,11 +345,14 @@ public class TransactionFormController {
             BigDecimal amount,
             String target,
             String initiator
-    ) {}
+    ) {
+    }
 
     public interface Actions {
         void onCancel();
+
         void onSaveDraft();
+
         void onSubmit(boolean approveImmediately);
     }
 
@@ -326,5 +362,7 @@ public class TransactionFormController {
         return t.isEmpty() ? null : t;
     }
 
-    private static String n2e(String s) { return s == null ? "" : s; }
+    private static String n2e(String s) {
+        return s == null ? "" : s;
+    }
 }
