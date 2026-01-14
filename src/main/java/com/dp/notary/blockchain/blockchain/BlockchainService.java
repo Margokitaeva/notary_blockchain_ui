@@ -24,7 +24,6 @@ public class BlockchainService {
         this.txRepo = txRepo;
         this.blockRepo = blockRepo;
         this.blockProcessor = blockProcessor;
-        createGenesisBlock();
     }
 
     public String addDraft(TransactionEntity tx) {
@@ -139,19 +138,6 @@ public class BlockchainService {
                 .skip((long) from * limit)
                 .limit(limit)
                 .toList();
-    }
-
-    public void createGenesisBlock() {
-        if (blockRepo.getHeight() > 0) {
-            return;
-        }
-
-        BlockEntity genesis = blockProcessor.createNextBlock(
-                List.of(),
-                null
-        );
-
-        blockRepo.append(genesis);
     }
 
     public void createNextBlock() {

@@ -1,5 +1,6 @@
 package com.dp.notary.blockchain.api.endpoint;
 
+import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.config.NotaryProperties;
@@ -15,10 +16,11 @@ public class TransactionController {
 
     private final BlockchainService blockchainService;
     private final NotaryProperties props;
-
-    public TransactionController(BlockchainService blockchainService, NotaryProperties props) {
+private final LeaderClient leaderClient;
+    public TransactionController(BlockchainService blockchainService, NotaryProperties props, LeaderClient leaderClient) {
         this.blockchainService = blockchainService;
         this.props = props;
+        this.leaderClient = leaderClient;
     }
     // сервис, который знает: лидер мы или реплика
 
@@ -30,7 +32,7 @@ public class TransactionController {
         String txId = blockchainService.addDraft(tx);
 
         if (Objects.equals(props.role(), "LEADER")) {
-            // TODO:отправка на реплики
+            leaderClient.broadcastAddDraft(tx);
         }
         return ResponseEntity.ok(txId);
     }
@@ -43,7 +45,8 @@ public class TransactionController {
         blockchainService.editDraft(tx);
 
         if (Objects.equals(props.role(), "LEADER")) {
-            // TODO:отправка на реплики
+
+            leaderClient.broadcastEditDraft(tx);
         }
 
         return ResponseEntity.ok().build();
@@ -57,19 +60,19 @@ public class TransactionController {
         blockchainService.deleteTransaction(txId);
 
         if (Objects.equals(props.role(), "LEADER")) {
-            // TODO:отправка на реплики
+            leaderClient.broadcastDeleteDraft(txId);
         }
 
         return ResponseEntity.ok().build();
     }
 
 
-    @PostMapping("/both/changeStatus/{txId}")
+    @PostMapping("/both/submit/{txId}")
     public ResponseEntity<Void> submit(@PathVariable String txId) {
         blockchainService.submitTransaction(txId);
 
         if (Objects.equals(props.role(), "LEADER")) {
-            // TODO:отправка на реплики
+            leaderClient.broadcastSubmit(txId);
         }
 
         return ResponseEntity.ok().build();

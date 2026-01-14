@@ -30,7 +30,10 @@ public class LeaderClient {
     }
 
     public void broadcastSubmit(String txId) {
-        broadcast("/tx/both/changeStatus/" + txId, null);
+        broadcast("/tx/both/submit/" + txId, null);
+    }
+    public void broadcastApprove(String txId) {
+        broadcast("/tx/both/approve/" + txId, null);
     }
 
     public void sendBlock(BlockEntity block) {
