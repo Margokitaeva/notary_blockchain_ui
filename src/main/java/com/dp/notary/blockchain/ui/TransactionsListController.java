@@ -403,7 +403,7 @@ public class TransactionsListController {
 
         List<TransactionEntity> txs = new ArrayList<>();
         if (mode == Mode.APPROVED) {
-            // call function to get list of transactions APPROVED txs = function
+            txs = blockchainService.getApprovedTransactions(page, PAGE_SIZE, createdByFilter, initiatorFilter, targetFilter, typeFilter);
         }
         else {
             txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), authService.getNameFromToken(App.get().getToken()), createdByFilter, initiatorFilter, targetFilter, typeFilter);

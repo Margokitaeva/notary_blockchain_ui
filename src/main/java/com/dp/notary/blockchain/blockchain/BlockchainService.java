@@ -167,6 +167,27 @@ public class BlockchainService {
                 .toList();
     }
 
+    public List<TransactionEntity> getApprovedTransactions(
+            int from,
+            int limit,
+            String createdByFilter,
+            String initiatorFilter,
+            String targetFilter,
+            TransactionType typeFilter
+    ) {
+        List<TransactionStatus> statuses = List.of(TransactionStatus.APPROVED, TransactionStatus.SEALED);
+
+        return txRepo.findByStatuses(
+                        statuses,
+                        createdByFilter,
+                        initiatorFilter,
+                        targetFilter,
+                        typeFilter,
+                        from * limit,
+                        limit
+        );
+    }
+
     public void createGenesisBlock() {
         if (blockRepo.getHeight() > 0) {
             return;

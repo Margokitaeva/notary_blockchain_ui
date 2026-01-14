@@ -14,6 +14,7 @@ public interface TransactionStateRepository {
     boolean updateStatus(String txId, TransactionStatus status);
     List<TransactionEntity> findByStatus(TransactionStatus status);
     List<TransactionEntity> findByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter);
+    List<TransactionEntity> findByStatuses(List<TransactionStatus> statuses, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter, int offset, int limit);
     int countByStatus(TransactionStatus status);
     int countByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter);
     Optional<TransactionEntity> find(String txId);

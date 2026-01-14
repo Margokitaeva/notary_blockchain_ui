@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -151,6 +152,68 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                 typeFilterString, typeFilterString
         );
     }
+
+    @Override
+    public List<TransactionEntity> findByStatuses(List<TransactionStatus> statuses,
+                                                  String createdByFilter,
+                                                  String initiatorFilter,
+                                                  String targetFilter,
+                                                  TransactionType typeFilter,
+                                                  int offset,
+                                                  int limit) {
+        if (statuses == null || statuses.isEmpty()) {
+            return List.of();
+        }
+
+        createdByFilter = trimToNull(createdByFilter);
+        initiatorFilter = trimToNull(initiatorFilter);
+        targetFilter    = trimToNull(targetFilter);
+        String typeFilterString = typeFilter != null ? typeFilter.name() : null;
+
+        offset = Math.max(0, offset);
+        limit  = Math.max(1, limit);
+
+        String statusPlaceholders = String.join(
+                ",",
+                statuses.stream().map(s -> "?").toList()
+        );
+
+        String sql = """
+                        SELECT tx_key,
+                               timestamp,
+                               type,
+                               created_by,
+                               status,
+                               amount,
+                               target,
+                               initiator
+                        FROM transactions
+                        WHERE status IN (%s)
+                          AND (? IS NULL OR created_by = ?)
+                          AND (? IS NULL OR initiator = ?)
+                          AND (? IS NULL OR target = ?)
+                          AND (? IS NULL OR type = ?)
+                        ORDER BY timestamp DESC
+                        LIMIT ? OFFSET ?
+                    """.formatted(statusPlaceholders);
+
+        List<Object> params = new ArrayList<>();
+
+        // статусы
+        statuses.forEach(s -> params.add(s.name()));
+
+        // фильтры
+        params.add(createdByFilter); params.add(createdByFilter);
+        params.add(initiatorFilter); params.add(initiatorFilter);
+        params.add(targetFilter);    params.add(targetFilter);
+        params.add(typeFilterString);params.add(typeFilterString);
+
+        params.add(limit);
+        params.add(offset);
+
+        return jdbc.query(sql, this::mapRow, params.toArray());
+    }
+
 
     @Override
     public int countByStatus(TransactionStatus status) {

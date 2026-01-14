@@ -70,10 +70,18 @@ public class AuthService {
      * Проверка токена и роли пользователя
      * Возвращает true если токен валиден и роль совпадает
      */
-    public boolean validateTokenWithRole(String token, Role expectedRole) {
-        if (!tokenProvider.validateToken(token)) return false;
+    public boolean validateRole(String token, Role expectedRole) {
         Role role = tokenProvider.getRole(token);
         return expectedRole.equals(role);
+    }
+
+    //refreshes if false
+    public String validateToken(String token){
+        if(tokenProvider.validateToken(token)){
+            return token;
+        }else{
+            return loginWithToken(token);
+        }
     }
 
     /**
