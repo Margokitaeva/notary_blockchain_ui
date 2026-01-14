@@ -121,7 +121,12 @@ public class TransactionsListController {
 
     public void setMode(Mode mode) {
         this.mode = Objects.requireNonNull(mode);
+        createdByFilter = null;
+        initiatorFilter = null;
+        targetFilter = null;
+        typeFilter = null;
         loadPage(0);
+        updateDetails(null);
         refreshActions();        // buttons depend on mode + status
         updateDetails(table.getSelectionModel().getSelectedItem());
     }
@@ -394,9 +399,6 @@ public class TransactionsListController {
         // mode PENDING = transaction status SUBMITTED any user
         // mode MY_SUBMITTED = transaction status SUBMITTED (same as above) DECLINED for current user - i guess you dont have it in this file do you need to add ??
 
-        // TODO: получить транзакции в зависимости от статуса и 4 переменных фильтров createdByFilter, initiatorFilter, targetFilter, typeFilter
-        //  not done!!!
-
         pageTransactions.clear();
 
         List<TransactionEntity> txs = new ArrayList<>();
@@ -404,7 +406,7 @@ public class TransactionsListController {
             // call function to get list of transactions APPROVED txs = function
         }
         else {
-            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), authService.getNameFromToken(App.get().getToken()));
+            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), authService.getNameFromToken(App.get().getToken()), createdByFilter, initiatorFilter, targetFilter, typeFilter);
 
         }
 
@@ -418,11 +420,11 @@ public class TransactionsListController {
         String username = authService.getNameFromToken(App.get().getToken());
         int total;
         switch (mode) {
-            case APPROVED -> total = blockchainService.totalApproved();
-            case DRAFTS -> total = blockchainService.totalDraft(username);
-            case PENDING -> total = blockchainService.totalSubmitted();
-            case MY_SUBMITTED -> total = blockchainService.totalSubmitted(username);
-            case DECLINED -> total = blockchainService.totalDeclined(username);
+            case APPROVED -> total = blockchainService.totalApproved(createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case DRAFTS -> total = blockchainService.totalDraft(username, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case PENDING -> total = blockchainService.totalSubmitted(createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case MY_SUBMITTED -> total = blockchainService.totalSubmitted(username, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case DECLINED -> total = blockchainService.totalDeclined(username, createdByFilter, initiatorFilter, targetFilter, typeFilter);
             default -> total = 0;
         }
 
@@ -551,6 +553,7 @@ public class TransactionsListController {
             this.createdBy.set(tx.getCreatedBy());
             this.target.set(tx.getTarget());//TODO: расшифровать payload
             this.amount.set(tx.getAmount().toString());
+            this.initiator.set(tx.getInitiator());
         }
 
         public String id() { return id.get(); }

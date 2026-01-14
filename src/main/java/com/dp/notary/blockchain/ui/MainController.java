@@ -92,19 +92,19 @@ public class MainController {
             if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER) {
                 c.configureForLeader(
                         new DashboardController.LeaderStatsVM(
-                                blockchainService.totalApproved(),
-                                blockchainService.totalSubmitted(),
-                                blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()))
+                                blockchainService.totalApproved(null, null, null, null),
+                                blockchainService.totalSubmitted(null, null, null, null),
+                                blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()), null, null, null, null)
                         )
                 );
             } else {
                 String username = authService.getNameFromToken(App.get().getToken());
                 c.configureForReplica(
                         new DashboardController.ReplicaStatsVM(
-                                blockchainService.totalApproved(username),
-                                blockchainService.totalSubmitted(username),
-                                blockchainService.totalDraft(username),
-                                blockchainService.totalDeclined(username)
+                                blockchainService.totalApproved(username, null, null, null, null),
+                                blockchainService.totalSubmitted(username, null, null, null, null),
+                                blockchainService.totalDraft(username, null, null, null, null),
+                                blockchainService.totalDeclined(username, null, null, null, null)
                         )
                 );
             }

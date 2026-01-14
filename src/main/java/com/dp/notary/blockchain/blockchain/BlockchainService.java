@@ -88,53 +88,79 @@ public class BlockchainService {
         txRepo.updateStatus(txId, to);
     }
 
-    public int totalApproved(String user) {
-        return txRepo.findByStatus(TransactionStatus.APPROVED).stream()
+    public int totalApproved(String user,
+                             String createdByFilter,
+                             String initiatorFilter,
+                             String targetFilter,
+                             TransactionType typeFilter) {
+        return txRepo.findByStatus(TransactionStatus.APPROVED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> tx.getCreatedBy().equals(user))
                 .toList()
                 .size()
-                + txRepo.findByStatus(TransactionStatus.SEALED).stream()
+                + txRepo.findByStatus(TransactionStatus.SEALED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> tx.getCreatedBy().equals(user))
                 .toList().size();
     }
 
-    public int totalDraft(String user) {
-        return txRepo.findByStatus(TransactionStatus.DRAFT).stream()
+    public int totalDraft(String user,
+                          String createdByFilter,
+                          String initiatorFilter,
+                          String targetFilter,
+                          TransactionType typeFilter) {
+        return txRepo.findByStatus(TransactionStatus.DRAFT, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> tx.getCreatedBy().equals(user))
                 .toList()
                 .size();
     }
 
-    public int totalDeclined(String user) {
-        return txRepo.findByStatus(TransactionStatus.DECLINED).stream()
+    public int totalDeclined(String user,
+                             String createdByFilter,
+                             String initiatorFilter,
+                             String targetFilter,
+                             TransactionType typeFilter) {
+        return txRepo.findByStatus(TransactionStatus.DECLINED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> tx.getCreatedBy().equals(user))
                 .toList()
                 .size();
     }
 
-    public int totalSubmitted(String user) {
-        return txRepo.findByStatus(TransactionStatus.SUBMITTED).stream()
+    public int totalSubmitted(String user,
+                              String createdByFilter,
+                              String initiatorFilter,
+                              String targetFilter,
+                              TransactionType typeFilter) {
+        return txRepo.findByStatus(TransactionStatus.SUBMITTED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> tx.getCreatedBy().equals(user))
                 .toList()
                 .size();
     }
 
-    public int totalApproved() {
-        return txRepo.countByStatus(TransactionStatus.APPROVED)
-                + txRepo.countByStatus(TransactionStatus.SEALED);
+    public int totalApproved(String createdByFilter,
+                             String initiatorFilter,
+                             String targetFilter,
+                             TransactionType typeFilter) {
+        return txRepo.countByStatus(TransactionStatus.APPROVED, createdByFilter, initiatorFilter, targetFilter, typeFilter)
+                + txRepo.countByStatus(TransactionStatus.SEALED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
     }
 
-    public int totalSubmitted() {
-        return txRepo.countByStatus(TransactionStatus.SUBMITTED);
+    public int totalSubmitted(String createdByFilter,
+                              String initiatorFilter,
+                              String targetFilter,
+                              TransactionType typeFilter) {
+        return txRepo.countByStatus(TransactionStatus.SUBMITTED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
     }
 
     public List<TransactionEntity> getStatusTransactions(
             int from,
             int limit,
             TransactionStatus status,
-            String user
+            String user,
+            String createdByFilter,
+            String initiatorFilter,
+            String targetFilter,
+            TransactionType typeFilter
     ) {
-        return txRepo.findByStatus(status).stream()
+        return txRepo.findByStatus(status, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
                 .filter(tx -> user == null || tx.getCreatedBy().equals(user))
                 .skip((long) from * limit)
                 .limit(limit)

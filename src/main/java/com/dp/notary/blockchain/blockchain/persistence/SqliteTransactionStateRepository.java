@@ -17,6 +17,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static org.apache.logging.log4j.util.Strings.trimToNull;
+
 @Repository
 public class SqliteTransactionStateRepository implements TransactionStateRepository {
 
@@ -117,6 +119,40 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
+    public List<TransactionEntity> findByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter) {
+       if (status == null) {
+           return List.of();
+       }
+        createdByFilter = trimToNull(createdByFilter);
+        initiatorFilter = trimToNull(initiatorFilter);
+        targetFilter    = trimToNull(targetFilter);
+        String typeFilterString = typeFilter != null ? typeFilter.name() : null;
+        return jdbc.query(
+               """
+                           SELECT tx_key,
+                           timestamp,
+                           type,
+                           created_by,
+                           status,
+                           amount,
+                           target,
+                           initiator
+               FROM transactions WHERE status = ?
+                   AND (? IS NULL OR created_by = ?)
+                   AND (? IS NULL OR initiator = ?)
+                   AND (? IS NULL OR target = ?)
+                   AND (? IS NULL OR type = ?)
+               """,
+                this::mapRow,
+                status.name(),
+                createdByFilter, createdByFilter,
+                initiatorFilter, initiatorFilter,
+                targetFilter, targetFilter,
+                typeFilterString, typeFilterString
+        );
+    }
+
+    @Override
     public int countByStatus(TransactionStatus status) {
         if (status == null) {
             return 0;
@@ -126,6 +162,35 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                 "SELECT COUNT(1) FROM transactions WHERE status=?",
                 Integer.class,
                 status.name()
+        );
+        return cnt == null ? 0 : cnt;
+    }
+
+    @Override
+    public int countByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter) {
+        if (status == null) {
+            return 0;
+        }
+
+        createdByFilter = trimToNull(createdByFilter);
+        initiatorFilter = trimToNull(initiatorFilter);
+        targetFilter    = trimToNull(targetFilter);
+        String typeFilterString = typeFilter != null ? typeFilter.name() : null;
+
+        Integer cnt = jdbc.queryForObject(
+            """
+                    SELECT COUNT(1) FROM transactions WHERE status=?
+                        AND (? IS NULL OR created_by = ?)
+                        AND (? IS NULL OR initiator = ?)
+                        AND (? IS NULL OR target = ?)
+                        AND (? IS NULL OR type = ?)
+                """,
+                Integer.class,
+                status.name(),
+                createdByFilter, createdByFilter,
+                initiatorFilter, initiatorFilter,
+                targetFilter, targetFilter,
+                typeFilterString, typeFilterString
         );
         return cnt == null ? 0 : cnt;
     }
