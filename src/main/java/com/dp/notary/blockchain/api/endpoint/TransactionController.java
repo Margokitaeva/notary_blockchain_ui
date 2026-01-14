@@ -1,4 +1,4 @@
-package com.dp.notary.blockchain.api;
+package com.dp.notary.blockchain.api.endpoint;
 
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -26,7 +25,7 @@ public class TransactionController {
     /**
      * Добавить черновик
      */
-    @PostMapping("/addDraft")
+    @PostMapping("/both/addDraft")
     public ResponseEntity<String> addDraft(@RequestBody TransactionEntity tx) {
         String txId = blockchainService.addDraft(tx);
 
@@ -39,7 +38,7 @@ public class TransactionController {
     /**
      * Обновить черновик
      */
-    @PutMapping("/editDraft")
+    @PutMapping("/both/editDraft")
     public ResponseEntity<Void> editDraft(@RequestBody TransactionEntity tx) {
         blockchainService.editDraft(tx);
 
@@ -53,7 +52,7 @@ public class TransactionController {
     /**
      * Удалить черновик
      */
-    @DeleteMapping("/deleteDraft/{txId}")
+    @DeleteMapping("/both/deleteDraft/{txId}")
     public ResponseEntity<Void> deleteDraft(@PathVariable String txId) {
         blockchainService.deleteTransaction(txId);
 
@@ -65,7 +64,7 @@ public class TransactionController {
     }
 
 
-    @PostMapping("/changeStatus/{txId}")
+    @PostMapping("/both/changeStatus/{txId}")
     public ResponseEntity<Void> submit(@PathVariable String txId) {
         blockchainService.submitTransaction(txId);
 
@@ -76,7 +75,7 @@ public class TransactionController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/approve/{txId}")
+    @PostMapping("/replica/approve/{txId}")
     public ResponseEntity<Void> approve(@PathVariable String txId) {
         if (Objects.equals(props.role(), "REPLICA")) {
             blockchainService.approve(txId);
@@ -85,7 +84,7 @@ public class TransactionController {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping("/decline/{txId}")
+    @PostMapping("/replica/decline/{txId}")
     public ResponseEntity<Void> decline(@PathVariable String txId) {
         if (Objects.equals(props.role(), "REPLICA")) {
             blockchainService.decline(txId);

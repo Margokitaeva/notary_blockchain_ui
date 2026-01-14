@@ -1,8 +1,5 @@
 package com.dp.notary.blockchain.blockchain;
 
-import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
-import com.dp.notary.blockchain.api.dto.SubmitActRequest;
-import com.dp.notary.blockchain.api.dto.SubmitActResponse;
 import com.dp.notary.blockchain.blockchain.model.*;
 import com.dp.notary.blockchain.blockchain.persistence.BlockRepository;
 import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepository;

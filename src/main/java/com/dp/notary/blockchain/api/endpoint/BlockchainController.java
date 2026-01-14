@@ -1,4 +1,4 @@
-package com.dp.notary.blockchain.api;
+package com.dp.notary.blockchain.api.endpoint;
 
 import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
