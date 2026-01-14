@@ -1,8 +1,5 @@
 package com.dp.notary.blockchain.blockchain;
 
-import com.dp.notary.blockchain.api.dto.NodeStatusResponse;
-import com.dp.notary.blockchain.api.dto.SubmitActRequest;
-import com.dp.notary.blockchain.api.dto.SubmitActResponse;
 import com.dp.notary.blockchain.blockchain.model.*;
 import com.dp.notary.blockchain.blockchain.persistence.BlockRepository;
 import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepository;
@@ -27,7 +24,6 @@ public class BlockchainService {
         this.txRepo = txRepo;
         this.blockRepo = blockRepo;
         this.blockProcessor = blockProcessor;
-        createGenesisBlock();
     }
 
     public String addDraft(TransactionEntity tx) {
@@ -64,11 +60,14 @@ public class BlockchainService {
 
     public void approve(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.APPROVED);
-        this.createGenesisBlock();
     }
 
     public void decline(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.DECLINED);
+    }
+
+    public void seal(String txId) {
+        updateStatusStrict(txId, TransactionStatus.APPROVED, TransactionStatus.SEALED);
     }
 
     private void updateStatusStrict(
@@ -188,19 +187,6 @@ public class BlockchainService {
         );
     }
 
-    public void createGenesisBlock() {
-        if (blockRepo.getHeight() > 0) {
-            return;
-        }
-
-        BlockEntity genesis = blockProcessor.createNextBlock(
-                List.of(),
-                null
-        );
-
-        blockRepo.append(genesis);
-    }
-
     public void createNextBlock() {
         List<TransactionEntity> approvedTxs = txRepo.findByStatus(TransactionStatus.APPROVED);
 
@@ -221,7 +207,8 @@ public class BlockchainService {
 
         blockRepo.append(next);
 
-        txsForBlock.forEach(tx -> txRepo.updateStatus(tx.getTxId(), TransactionStatus.SEALED));
+        txsForBlock.forEach(tx -> seal(tx.getTxId()));
+
     }
 
 
@@ -238,19 +225,16 @@ public class BlockchainService {
 
 
     public void addBlock(BlockEntity block) {
-        // Берем текущий head
+
         BlockEntity head = blockRepo.findHead()
                 .orElseThrow(() -> new IllegalStateException("No genesis block"));
 
-        // Проверяем блок
         if (!blockProcessor.validateBlock(head, block)) {
             throw new IllegalStateException("Invalid block: failed validation");
         }
 
-        // Добавляем блок в блокчейн
         blockRepo.append(block);
 
-        // Меняем статусы транзакций, которые вошли в блок на SEALED
         block.getTransactions().forEach(txId ->
                 txRepo.updateStatus(txId, TransactionStatus.SEALED)
         );

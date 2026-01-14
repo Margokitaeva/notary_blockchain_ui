@@ -1,9 +1,11 @@
 server:
-  port: 8080
+  port: 8081
 
 notary:
-  role: LEADER
+  role: REPLICA
   leaderUrl: http://localhost:8080
+  replicas:
+    - http://localhost:8081
 tokens:
   TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
   ValideTime: 600000
@@ -14,7 +16,7 @@ ui:
 
 spring:
   datasource:
-    url: jdbc:sqlite:./notary.db
+    url: jdbc:sqlite:./replica.db
     driver-class-name: org.sqlite.JDBC
 
   sql:
