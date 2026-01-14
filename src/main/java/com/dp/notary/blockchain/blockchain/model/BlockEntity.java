@@ -14,8 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class BlockEntity {
     private long height;
-    private String hash;
     private String prevHash;
     private Instant timestamp;
-    private List<Integer> transactions;
+    private List<String> transactions;
 }

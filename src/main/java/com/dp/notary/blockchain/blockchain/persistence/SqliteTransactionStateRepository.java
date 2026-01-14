@@ -8,10 +8,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,58 +32,63 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                 """
                 UPDATE transactions
                 SET type = ?,
-                    payload = ?,
-                    created_by = ?,
-                    status = ?
-                WHERE tx_id = ?
+                    amount = ?,
+                    target = ?
+                WHERE tx_key = ?
                 """,
                 tx.getType().name(),
-                tx.getPayload(),
-                tx.getCreatedBy(),
-                tx.getStatus().name(),
+                tx.getAmount(),
+                tx.getTarget(),
                 tx.getTxId()
         );
     }
 
     @Override
-    public void delete(long txId) {
+    public void delete(String txId) {
         int deleted = jdbc.update(
-                "DELETE FROM transactions WHERE tx_id = ?",
+                "DELETE FROM transactions WHERE tx_key = ?",
                 txId
         );
     }
     @Override
-    public long insert(TransactionEntity tx) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+    public String insert(TransactionEntity tx) {
 
         jdbc.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(
                     """
-                    INSERT INTO transactions(type, payload, created_by, status)
-                    VALUES (?, ?, ?, ?)
-                    """,
+                    INSERT INTO transactions(
+                         tx_key,
+                         timestamp,
+                         type,
+                         created_by,
+                         status,
+                         amount,
+                         target,
+                        initiator
+    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """,
                     Statement.RETURN_GENERATED_KEYS
             );
-            ps.setString(1, tx.getType().name());
-            ps.setString(2, tx.getPayload());
-            ps.setString(3, tx.getCreatedBy());
-            ps.setString(4, tx.getStatus().toString());
+            ps.setString(1,tx.getTxId());
+            ps.setString(2, tx.getTimestamp().toString());
+            ps.setString(3, tx.getType().name());
+            ps.setString(4, tx.getCreatedBy());
+            ps.setString(5, tx.getStatus().toString());
+            ps.setString(6, tx.getAmount().toString());
+            ps.setString(7, tx.getTarget());
+            ps.setString(8, tx.getInitiator());
             return ps;
-        }, keyHolder);
+        });
 
-        Number key = keyHolder.getKey();
-        if (key == null) {
-            throw new IllegalStateException("Failed to retrieve generated id");
-        }
-
-        return key.longValue();
+        return tx.getTxId();
     }
 
 
     @Override
-    public boolean updateStatus(long txId, TransactionStatus status) {
+    public boolean updateStatus(String txId, TransactionStatus status) {
         int updated = jdbc.update(
-                "UPDATE transactions SET status = ? WHERE tx_id = ?",
+                "UPDATE transactions SET status = ? WHERE tx_key = ?",
                 status.name(), txId
         );
         return updated > 0;
@@ -93,7 +100,17 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
             return List.of();
         }
         return jdbc.query(
-                "SELECT tx_id, type, payload, created_by, status FROM transactions WHERE status = ?",
+                """
+                         SELECT tx_key,
+                         timestamp,
+                         type,
+                         created_by,
+                         status,
+                         amount,
+                         target,
+                        initiator
+                FROM transactions WHERE status = ?
+                """,
                 this::mapRow,
                 status.name()
         );
@@ -114,9 +131,18 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
-    public Optional<TransactionEntity> find(long txId) {
+    public Optional<TransactionEntity> find(String txId) {
         var rows = jdbc.query(
-                "SELECT tx_id, type, payload, created_by, status FROM transactions WHERE tx_id = ?",
+                """
+                         SELECT tx_key,
+                         timestamp,
+                         type,
+                         created_by,
+                         status,
+                         amount,
+                         target,
+                        initiator FROM transactions WHERE tx_key = ?
+                        """,
                 this::mapRow, txId
         );
         return rows.stream().findFirst();
@@ -124,11 +150,14 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
 
     private TransactionEntity mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new TransactionEntity(
-                rs.getInt("tx_id"),
+                rs.getString("tx_key"),
+                Instant.parse(rs.getString("timestamp")),
                 TransactionType.valueOf(rs.getString("type")),
-                rs.getString("payload"),
                 rs.getString("created_by"),
-                TransactionStatus.valueOf(rs.getString("status"))
+                TransactionStatus.valueOf(rs.getString("status")),
+                new BigDecimal(rs.getString("amount")),
+                rs.getString("target"),
+                rs.getString("initiator")
         );
     }
 }

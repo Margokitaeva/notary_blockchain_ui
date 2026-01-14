@@ -288,12 +288,12 @@ public class MainController {
             TransactionFormController.TransactionFormVM vm =
                     new TransactionFormController.TransactionFormVM(
                             tx.id(),
-                            LocalDateTime.ofInstant(tx.timestamp(), ZoneId.systemDefault()),
+                            tx.timestamp(),
                             TransactionType.valueOf(tx.type().name()),
                             tx.createdBy(),
-                            tx.initiator(),
+                            tx.amount(),
                             tx.target(),
-                            (int) Math.round(tx.amount())
+                            tx.initiator()
                     );
 
             f.setTransaction(vm);

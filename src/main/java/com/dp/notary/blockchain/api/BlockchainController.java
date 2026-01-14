@@ -36,14 +36,7 @@ public class BlockchainController {
 
     @PostMapping("/acts")
     public SubmitActResponse submit(@RequestBody SubmitActRequest req) {
-        TransactionEntity tx = new TransactionEntity(
-                0,
-                TransactionType.valueOf(req.type()),
-                req.payload(),
-                req.createdBy(),
-                TransactionStatus.DRAFT
-        );
-        long id = blockchain.addDraft(tx);
-        return new SubmitActResponse(Long.toString(id),"хуй");
+        //TODO: и тут нахуй тоже
+        return new SubmitActResponse("хуй","хуй");
     }
 }

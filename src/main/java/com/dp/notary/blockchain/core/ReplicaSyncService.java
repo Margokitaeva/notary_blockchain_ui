@@ -74,14 +74,8 @@ public class ReplicaSyncService {
             try {
                 SubmitActResponse resp = leaderClient.forwardAct(draft.request());
                 TransactionType type = TransactionType.fromString(draft.request().type());
-                TransactionEntity tx = new TransactionEntity(
-                        Integer.parseInt(resp.txId()),
-                        type,
-                        draft.request().payload(),
-                        draft.request().createdBy(),
-                        TransactionStatus.SUBMITTED
-                );
-                blockchain.addDraft(tx);
+                //TODO: я хуй пойми какая тут логика
+
 
                 draftBuffer.remove(draft.clientKey());
             } catch (Exception e) {

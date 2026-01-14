@@ -18,7 +18,7 @@ public class SqliteBlockRepository implements BlockRepository {
     private final JdbcTemplate jdbc;
     private final ObjectMapper om;
 
-    private static final TypeReference<List<Integer>> TX_LIST = new TypeReference<>() {};
+    private static final TypeReference<List<String>> TX_LIST = new TypeReference<>() {};
 
     public SqliteBlockRepository(JdbcTemplate jdbc, ObjectMapper om) {
         this.jdbc = jdbc;
@@ -28,10 +28,9 @@ public class SqliteBlockRepository implements BlockRepository {
     @Override
     public Optional<BlockEntity> findHead() {
         var rows = jdbc.query(
-                "SELECT height, hash, prev_hash, time_stamp, tx_json FROM blocks ORDER BY height DESC LIMIT 1",
+                "SELECT height, prev_hash, time_stamp, tx_json FROM blocks ORDER BY height DESC LIMIT 1",
                 (rs, i) -> mapEntity(
                         rs.getLong("height"),
-                        rs.getString("hash"),
                         rs.getString("prev_hash"),
                         rs.getString("ts"),
                         rs.getString("tx_json")
@@ -52,10 +51,9 @@ public class SqliteBlockRepository implements BlockRepository {
     @Override
     public List<BlockEntity> findFromHeight(long fromHeight, int limit) {
         return jdbc.query(
-                "SELECT height, hash, prev_hash, time_stamp, tx_json FROM blocks WHERE height >= ? ORDER BY height ASC LIMIT ?",
+                "SELECT height, prev_hash, time_stamp, tx_json FROM blocks WHERE height >= ? ORDER BY height ASC LIMIT ?",
                 (rs, i) -> mapEntity(
                         rs.getLong("height"),
-                        rs.getString("hash"),
                         rs.getString("prev_hash"),
                         rs.getString("ts"),
                         rs.getString("tx_json")
@@ -69,8 +67,7 @@ public class SqliteBlockRepository implements BlockRepository {
         try {
             String txJson = om.writeValueAsString(b.getTransactions());
             jdbc.update(
-                    "INSERT INTO blocks(hash, prev_hash, time_stamp, tx_json) VALUES(?,?,?,?)",
-                    b.getHash(),
+                    "INSERT INTO blocks(prev_hash, time_stamp, tx_json) VALUES(?,?,?)",
                     b.getPrevHash(),
                     b.getTimestamp().toString(),
                     txJson
@@ -86,10 +83,10 @@ public class SqliteBlockRepository implements BlockRepository {
         return cnt != null && cnt > 0;
     }
 
-    private BlockEntity mapEntity(long height, String hash, String prevHash, String ts, String txJson) {
+    private BlockEntity mapEntity(long height, String prevHash, String ts, String txJson) {
         try {
-            List<Integer> txs = om.readValue(txJson, TX_LIST);
-            return new BlockEntity(height, hash, prevHash, Instant.parse(ts), txs);
+            List<String> txs = om.readValue(txJson, TX_LIST);
+            return new BlockEntity(height, prevHash, Instant.parse(ts), txs);
         } catch (Exception e) {
             throw new RuntimeException("Failed to map block", e);
         }

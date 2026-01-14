@@ -11,8 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OwnerEntity {
-    private String id;
-    private String name;
-    private String surname;
+    private String name_surname;
 
 }

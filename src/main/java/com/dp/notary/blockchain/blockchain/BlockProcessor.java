@@ -25,40 +25,31 @@ public class BlockProcessor {
     }
 
 
-    public BlockEntity createNextBlock(List<Integer> transactions, BlockEntity head) {
+    public BlockEntity createNextBlock(List<String> transactions, BlockEntity head) {
         long nextHeight = head == null ? 0 : head.getHeight() + 1;
-        String prevHash = head == null ? "" : head.getHash();
+        String prevHash = head == null ? "" : calculateHash(head);
         Instant ts = clock.instant();
-        String hash = calculateHash(nextHeight, prevHash, ts, transactions);
-        return new BlockEntity(nextHeight, hash, prevHash, ts, transactions);
+        return new BlockEntity(nextHeight, prevHash, ts, transactions);
     }
     public boolean validateBlock(BlockEntity previous, BlockEntity current) {
 
+        String expectedHash = calculateHash(previous);
 
-        if (!previous.getHash().equals(current.getPrevHash())) {
-            return false;
-        }
 
-        String expectedHash = calculateHash(
-                current.getHeight(),
-                current.getPrevHash(),
-                current.getTimestamp(),
-                current.getTransactions()
-        );
-        return expectedHash.equals(current.getHash());
+        return previous.equals(current.getPrevHash());
     }
-    public String calculateHash(long height, String prevHash, Instant timestamp, List<Integer> txs) {
+    public String calculateHash(BlockEntity block) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(Long.toString(height).getBytes(StandardCharsets.UTF_8));
+            digest.update(Long.toString(block.getHeight()).getBytes(StandardCharsets.UTF_8));
             digest.update("|".getBytes(StandardCharsets.UTF_8));
-            digest.update(prevHash == null ? new byte[0] : prevHash.getBytes(StandardCharsets.UTF_8));
+            digest.update(block.getPrevHash() == null ? new byte[0] : block.getPrevHash().getBytes(StandardCharsets.UTF_8));
             digest.update("|".getBytes(StandardCharsets.UTF_8));
-            digest.update(Long.toString(timestamp.toEpochMilli()).getBytes(StandardCharsets.UTF_8));
+            digest.update(Long.toString(block.getTimestamp().toEpochMilli()).getBytes(StandardCharsets.UTF_8));
 
-            for (Integer tx : txs) {
+            for (String tx : block.getTransactions()) {
                 digest.update("|".getBytes(StandardCharsets.UTF_8));
-                digest.update(tx.toString().getBytes(StandardCharsets.UTF_8));
+                digest.update(tx.getBytes(StandardCharsets.UTF_8));
             }
 
             return HexFormat.of().formatHex(digest.digest());

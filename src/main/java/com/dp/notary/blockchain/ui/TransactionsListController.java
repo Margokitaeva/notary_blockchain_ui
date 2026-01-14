@@ -19,6 +19,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -549,7 +551,7 @@ public class TransactionsListController {
     }
 
     public static final class  TransactionRowVM {
-        private final SimpleIntegerProperty id = new SimpleIntegerProperty();
+        private final SimpleStringProperty id = new SimpleStringProperty();
         private final SimpleLongProperty timestampEpoch = new SimpleLongProperty();
 
         private final TransactionStatus status;
@@ -559,16 +561,16 @@ public class TransactionsListController {
         private final SimpleStringProperty initiator = new SimpleStringProperty();
         private final SimpleStringProperty target = new SimpleStringProperty();
 
-        private final SimpleDoubleProperty amount = new SimpleDoubleProperty();
+        private final SimpleStringProperty amount = new SimpleStringProperty();
 
-        public TransactionRowVM(int id,
+        public TransactionRowVM(String id,
                              Instant timestamp,
                              TransactionStatus status,
                              TransactionType type,
                              String createdBy,
                              String initiator,
                              String target,
-                             double amount) {
+                             BigDecimal amount) {
             this.id.set(id);
             this.timestampEpoch.set(timestamp.getEpochSecond());
             this.status = status;
@@ -576,7 +578,7 @@ public class TransactionsListController {
             this.createdBy.set(createdBy);
             this.initiator.set(initiator);
             this.target.set(target);
-            this.amount.set(amount);
+            this.amount.set(amount.toString());
         }
         public TransactionRowVM(TransactionEntity tx) {
             this.id.set(tx.getTxId());
@@ -584,25 +586,18 @@ public class TransactionsListController {
             this.status = tx.getStatus();
             this.type = tx.getType();
             this.createdBy.set(tx.getCreatedBy());
-            this.target.set(tx.getPayload());//TODO: расшифровать payload
-            this.amount.set(tx.getPayload().length());
+            this.target.set(tx.getTarget());//TODO: расшифровать payload
+            this.amount.set(tx.getAmount().toString());
         }
 
-        public int id() { return id.get(); }
+        public String id() { return id.get(); }
         public Instant timestamp() { return Instant.ofEpochSecond(timestampEpoch.get()); }
         public TransactionStatus status() { return status; }
         public TransactionType type() { return type; }
         public String createdBy() { return createdBy.get(); }
         public String initiator() { return initiator.get(); }
         public String target() { return target.get(); }
-        public double amount() { return amount.get(); }
+        public BigDecimal amount() { return new BigDecimal(amount.get()); }
 
-        // for PropertyValueFactory("amount")
-        public double getAmount() { return amount.get(); }
-
-        public static TransactionRowVM demo(int id, Instant ts, TransactionStatus st, TransactionType tp,
-                                         String createdBy, String initiator, String target, double amount) {
-            return new TransactionRowVM(id, ts, st, tp, createdBy, initiator, target, amount);
-        }
     }
 }

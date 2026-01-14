@@ -16,6 +16,7 @@ import javafx.util.StringConverter;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
 @Component
@@ -120,11 +121,14 @@ public class TransactionFormController {
         clearError();
         if (buildAndValidatePayload()){
             TransactionEntity tx = new TransactionEntity(
-                    0,
+                    "хуй",
+                    Instant.now(),
                     typeCombo.getValue(),
-                    trimToNull(targetField.getText())+trimToNull(parsedAmount.toPlainString())+trimToNull(initiatorField.getText()),
                     authService.getNameFromToken(App.get().getToken()),
-                    TransactionStatus.DRAFT
+                    TransactionStatus.DRAFT,
+                    parsedAmount,
+                    targetField.getText(),
+                    initiatorField.getText()
             );
             blockchainService.addDraft(tx);
 
@@ -144,14 +148,16 @@ public class TransactionFormController {
         clearError();
         if (buildAndValidatePayload()) {
             TransactionEntity tx = new TransactionEntity(
-                    0,
+                    "хуй",
+                    Instant.now(),
                     typeCombo.getValue(),
-                    trimToNull(targetField.getText())+trimToNull(parsedAmount.toPlainString())+trimToNull(initiatorField.getText()),
                     authService.getNameFromToken(App.get().getToken()),
-                    TransactionStatus.DRAFT
-
+                    TransactionStatus.DRAFT,
+                    parsedAmount,
+                    targetField.getText(),
+                    initiatorField.getText()
             );
-            long txId = blockchainService.addDraft(tx);
+            String txId = blockchainService.addDraft(tx);
             blockchainService.submitTransaction(txId);
 
             boolean approveImmediately = false;
@@ -299,13 +305,13 @@ public class TransactionFormController {
      * Ты можешь заменить на свой реальный класс Transaction.
      */
     public record TransactionFormVM(
-            Integer id,
-            LocalDateTime timestamp,
+            String id,
+            Instant timestamp,
             TransactionType type,
             String createdBy,
-            String initiator,
+            BigDecimal amount,
             String target,
-            int amount
+            String initiator
     ) {}
 
     public interface Actions {

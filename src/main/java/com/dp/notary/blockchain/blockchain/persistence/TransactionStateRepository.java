@@ -8,11 +8,11 @@ import java.util.Optional;
 
 public interface TransactionStateRepository {
     void update(TransactionEntity tx);
-    void delete(long txId);
-    long insert(TransactionEntity tx);
-    boolean updateStatus(long txId, TransactionStatus status);
+    void delete(String txId);
+    String insert(TransactionEntity tx);
+    boolean updateStatus(String txId, TransactionStatus status);
     List<TransactionEntity> findByStatus(TransactionStatus status);
     int countByStatus(TransactionStatus status);
-    Optional<TransactionEntity> find(long txId);
+    Optional<TransactionEntity> find(String txId);
 
 }

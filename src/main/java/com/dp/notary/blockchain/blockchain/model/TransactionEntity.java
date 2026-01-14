@@ -5,14 +5,21 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TransactionEntity {
-    private int txId;
+    private String txId;
+    private Instant timestamp;
     private TransactionType type;
-    private String payload;
     private String createdBy;
     private TransactionStatus status;
+    private BigDecimal amount;
+    private String target;
+    private String initiator;
 }

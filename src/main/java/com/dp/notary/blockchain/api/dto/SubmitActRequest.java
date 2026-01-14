@@ -1,15 +1,13 @@
 package com.dp.notary.blockchain.api.dto;
 
+import java.math.BigDecimal;
+
 public record SubmitActRequest(
         String type,
         String payload,
         String createdBy,
-        String companyId,
-        String companyName,
-        java.math.BigDecimal amount,
+        BigDecimal amount,
         String target,
-        String ownerId,
-        String ownerName,
-        String ownerSurname,
+        String initiator,
         String clientRequestId
 ) {}

@@ -30,7 +30,8 @@ public class BlockchainService {
         createGenesisBlock();
     }
 
-    public long addDraft(TransactionEntity tx) {
+    public String addDraft(TransactionEntity tx) {
+        tx.setTxId(UUID.randomUUID().toString());
         tx.setStatus(TransactionStatus.DRAFT);
         return txRepo.insert(tx);
     }
@@ -46,7 +47,7 @@ public class BlockchainService {
         txRepo.update(tx);
     }
 
-    public void deleteTransaction(long txId) {
+    public void deleteTransaction(String txId) {
         TransactionEntity tx = txRepo.find(txId)
                 .orElseThrow(() -> new IllegalStateException("Transaction not found"));
 
@@ -57,21 +58,21 @@ public class BlockchainService {
         txRepo.delete(txId);
     }
 
-    public void submitTransaction(long txId) {
+    public void submitTransaction(String txId) {
         updateStatusStrict(txId, TransactionStatus.DRAFT, TransactionStatus.SUBMITTED);
     }
 
-    public void approve(long txId) {
+    public void approve(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.APPROVED);
         this.createGenesisBlock();
     }
 
-    public void decline(long txId) {
+    public void decline(String txId) {
         updateStatusStrict(txId, TransactionStatus.SUBMITTED, TransactionStatus.DECLINED);
     }
 
     private void updateStatusStrict(
-            long txId,
+            String txId,
             TransactionStatus from,
             TransactionStatus to
     ) {
@@ -165,7 +166,7 @@ public class BlockchainService {
         BlockEntity head = blockRepo.findHead()
                 .orElseThrow(() -> new IllegalStateException("No genesis block"));
 
-        List<Integer> txIds = txsForBlock.stream()
+        List<String> txIds = txsForBlock.stream()
                 .map(TransactionEntity::getTxId)
                 .toList();
 
