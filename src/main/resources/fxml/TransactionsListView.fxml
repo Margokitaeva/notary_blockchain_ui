@@ -54,6 +54,12 @@
 
                 <Button onAction="#onClearFilters" prefHeight="25.0" prefWidth="72.0" styleClass="tx-clear-btn" text="Clear" />
             </VBox>
+            <VBox spacing="2">
+                <Label styleClass="tx-filter-label" text=" " />
+
+                <Button onAction="#onApplyFilters" prefHeight="25.0" prefWidth="72.0" styleClass="tx-clear-btn" text="Apply" />
+            </VBox>
+
         </HBox>
     </VBox>
 

@@ -4,14 +4,10 @@ import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.*;
-import jakarta.annotation.PostConstruct;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -85,17 +81,20 @@ public class TransactionsListController {
     @Value("${ui.pageSize}")
     private int PAGE_SIZE;
 
+    // ===== DATA PIPELINE =====
     private int currentPage = 0;
+    // observableList - notifies if there are changes
     private final ObservableList<TransactionRowVM> pageTransactions = FXCollections.observableArrayList();
 
-    // ===== DATA PIPELINE =====
-    // observableList - notifies if there are changes
-    private final ObservableList<TransactionRowVM> master = FXCollections.observableArrayList();
-    private FilteredList<TransactionRowVM> filtered;
-    private SortedList<TransactionRowVM> sorted;
 
     // ===== MODE / CALLBACKS =====
     private Mode mode = Mode.APPROVED;
+
+    // ===== FILTERS ======
+    private String createdByFilter;
+    private String initiatorFilter;
+    private String targetFilter;
+    private TransactionType typeFilter;
 
     private Actions actions = new Actions() {
         @Override public void onEdit(TransactionRowVM tx) { System.out.println("Edit: ");}
@@ -113,21 +112,16 @@ public class TransactionsListController {
     // ================== MODULES ==================
     private AuthService authService;
     private BlockchainService blockchainService;
-    // ================== PUBLIC API ==================
 
+    // ================== PUBLIC API ==================
     TransactionsListController(AuthService authService, BlockchainService blockchainService){
         this.authService = authService;
         this.blockchainService = blockchainService;
     }
 
-    public void setItems(ObservableList<TransactionRowVM> items) {
-        master.setAll(items);
-    }
-
     public void setMode(Mode mode) {
         this.mode = Objects.requireNonNull(mode);
-//        applyModeUI();
-        reapplyFilter();         // status filter affects predicate only in MY_SUBMITTED
+        loadPage(0);
         refreshActions();        // buttons depend on mode + status
         updateDetails(table.getSelectionModel().getSelectedItem());
     }
@@ -145,7 +139,6 @@ public class TransactionsListController {
         setupDataPipeline();
         setupListeners();
 
-//        applyModeUI();
         resetDetails();
         refreshActions();
 
@@ -185,8 +178,7 @@ public class TransactionsListController {
     }
 
     private void setupDataPipeline() {
-        filtered = new FilteredList<>(master, tx -> true);
-        sorted = new SortedList<>(filtered);
+        SortedList<TransactionRowVM> sorted = new SortedList<>(pageTransactions);
 
         // KEY PART: built-in table sorting
         sorted.comparatorProperty().bind(table.comparatorProperty());
@@ -196,12 +188,6 @@ public class TransactionsListController {
     }
 
     private void setupListeners() {
-        // Filters
-        filterCreatedBy.textProperty().addListener((obs, o, n) -> reapplyFilter());
-        filterInitiator.textProperty().addListener((obs, o, n) -> reapplyFilter());
-        filterTarget.textProperty().addListener((obs, o, n) -> reapplyFilter());
-        filterType.valueProperty().addListener((obs, o, n) -> reapplyFilter());
-
         // Selection -> details + buttons
         table.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
             updateDetails(n);
@@ -212,31 +198,6 @@ public class TransactionsListController {
 
     // ================== FILTERING ==================
 
-    private void reapplyFilter() {
-        filtered.setPredicate(this::passesFilters);
-        refreshActions();
-        // если выбранный элемент отфильтровался — сбросим детали
-        TransactionRowVM sel = table.getSelectionModel().getSelectedItem();
-        if (sel == null || !filtered.contains(sel)) {
-            resetDetails();
-        }
-    }
-
-    private boolean passesFilters(TransactionRowVM tx) {
-        // Type (enum) filter
-        TypeFilterItem tf = filterType.getValue();
-        if (tf != null && tf.type() != null) {
-            if (tx.type() != tf.type()) return false;
-        }
-
-        // Partial text filters (case-insensitive)
-        if (!containsIgnoreCase(tx.createdBy(), filterCreatedBy.getText())) return false;
-        if (!containsIgnoreCase(tx.initiator(), filterInitiator.getText())) return false;
-        if (!containsIgnoreCase(tx.target(), filterTarget.getText())) return false;
-
-        return true;
-    }
-
     @FXML
     private void onClearFilters() {
         filterCreatedBy.clear();
@@ -245,7 +206,18 @@ public class TransactionsListController {
 
         filterType.getSelectionModel().selectFirst();
 
-        reapplyFilter();
+        onApplyFilters();
+    }
+
+    @FXML
+    private void onApplyFilters() {
+        // apply filters
+        createdByFilter = trimToNull(filterCreatedBy.getText());
+        initiatorFilter = trimToNull(filterInitiator.getText());
+        targetFilter    = trimToNull(filterTarget.getText());
+        typeFilter = filterType.getValue() != null ? filterType.getValue().type() : null;
+
+        loadPage(0);
     }
 
     // ================== DETAILS ==================
@@ -422,6 +394,8 @@ public class TransactionsListController {
         // mode PENDING = transaction status SUBMITTED any user
         // mode MY_SUBMITTED = transaction status SUBMITTED (same as above) DECLINED for current user - i guess you dont have it in this file do you need to add ??
 
+        // TODO: получить транзакции в зависимости от статуса и 4 переменных фильтров createdByFilter, initiatorFilter, targetFilter, typeFilter
+        //  not done!!!
 
         pageTransactions.clear();
 
@@ -437,7 +411,7 @@ public class TransactionsListController {
         pageTransactions.setAll(txs.stream().map(TransactionRowVM::new).toList());
 
         currentPage = page;
-        updateAll();
+        updatePagination();
     }
 
     private int getPageCount() {
@@ -455,17 +429,11 @@ public class TransactionsListController {
         return (int) Math.ceil((double) total / PAGE_SIZE);
     }
 
-    private void updateTable() {
-        table.setItems(pageTransactions);
-    }
-
     private boolean shouldShowPage(int page, int pageCount) {
         return page == 0
                 || page == pageCount - 1
                 || Math.abs(page - currentPage) <= 1;
     }
-
-
 
     private void renderPagination(HBox box) {
         box.getChildren().clear();
@@ -504,11 +472,6 @@ public class TransactionsListController {
             loadPage(currentPage + 1);
         });
         box.getChildren().add(next);
-    }
-
-    private void updateAll() {
-        updateTable();
-        updatePagination();
     }
 
     private void updatePagination() {
