@@ -5,6 +5,7 @@ import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.Role;
+import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
@@ -56,6 +57,7 @@ public class TransactionFormController {
     private Button submitBtn;
     private final AuthService authService;
     private final BlockchainService blockchainService;
+    private final SessionService sessionService;
 
     private BigDecimal parsedAmount;
 
@@ -89,9 +91,10 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService, LeaderClient leaderClient, ReplicaClient replicaClient) {
+    public TransactionFormController(AuthService authService, BlockchainService blockchainService, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient) {
         this.authService = authService;
         this.blockchainService = blockchainService;
+        this.sessionService = sessionService;
         this.leaderClient = leaderClient;
         this.replicaClient = replicaClient;
     }
@@ -189,7 +192,9 @@ public class TransactionFormController {
             boolean approveImmediately = false;
 
             if (Objects.equals(App.get().getAppRole(), "LEADER")) {
-                if (authService.getRoleFromToken(App.get().getToken()) == Role.LEADER) {
+                if (!sessionService.ensureAuthenticated())
+                    return;
+                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
                     approveImmediately = true;
                     blockchainService.approve(txId);
                     leaderClient.broadcastSubmit(txId);
@@ -291,7 +296,9 @@ public class TransactionFormController {
         createdByLabel.setText(authService.getNameFromToken(App.get().getToken()));
 
         // submit button text by role
-        submitBtn.setText(authService.getRoleFromToken(App.get().getToken()) == Role.LEADER ? "Submit and approve" : "Submit");
+        if (!sessionService.ensureAuthenticated())
+            return;
+        submitBtn.setText(authService.validateRole(App.get().getToken(), Role.LEADER) ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {

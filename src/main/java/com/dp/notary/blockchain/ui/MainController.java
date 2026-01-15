@@ -2,8 +2,10 @@ package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import jakarta.websocket.Session;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -21,7 +23,7 @@ import java.time.ZoneId;
 @Component
 public class MainController {
 
-    private final BlockchainService blockchainService;
+
     // ===== HEADER =====
     @FXML private Label pageTitle;
     @FXML private Label userNameLabel;
@@ -39,10 +41,13 @@ public class MainController {
     private TransactionsListController.Mode lastTxListMode = TransactionsListController.Mode.PENDING;
 
     private final AuthService authService;
+    private final BlockchainService blockchainService;
+    private final SessionService sessionService;
 
-    public MainController(AuthService authService, BlockchainService blockchainService) {
+    public MainController(AuthService authService, BlockchainService blockchainService, SessionService sessionService) {
         this.authService = authService;
         this.blockchainService = blockchainService;
+        this.sessionService = sessionService;
     }
 
     // ===== INIT =====
@@ -59,12 +64,18 @@ public class MainController {
         userNameLabel.setText("User: " + fullName);
         roleLabel.setText("Role: " + role.displayName());
 
-        pendingBtn.setVisible(role == Role.LEADER);
-        pendingBtn.setManaged(role == Role.LEADER);
-        submittedBtn.setVisible(role == Role.REPLICA);
-        submittedBtn.setManaged(role == Role.REPLICA);
-        declinedBtn.setVisible(role == Role.REPLICA);
-        declinedBtn.setManaged(role == Role.REPLICA);
+        if (!sessionService.ensureAuthenticated())
+            return;
+
+        boolean isLeader = authService.validateRole(App.get().getToken(), Role.LEADER);
+        boolean isReplica = authService.validateRole(App.get().getToken(), Role.REPLICA);
+
+        pendingBtn.setVisible(isLeader);
+        pendingBtn.setManaged(isLeader);
+        submittedBtn.setVisible(isReplica);
+        submittedBtn.setManaged(isReplica);
+        declinedBtn.setVisible(isReplica);
+        declinedBtn.setManaged(isReplica);
     }
 
     public void setPageTitle(String title) {
@@ -89,31 +100,27 @@ public class MainController {
 //                    /* totalShares */
 //            );
             // вынести первый иф в отдельную функцию
-            if (authService.validateToken(App.get().getToken()) == null) {
-                try {
-                    logout();
-                } catch (IOException ignored) {}
-            }
-            else {
-                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
-                    c.configureForLeader(
-                            new DashboardController.LeaderStatsVM(
-                                    blockchainService.totalApproved(null, null, null, null),
-                                    blockchainService.totalSubmitted(null, null, null, null),
-                                    blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()), null, null, null, null)
-                            )
-                    );
-                } else {
-                    String username = authService.getNameFromToken(App.get().getToken());
-                    c.configureForReplica(
-                            new DashboardController.ReplicaStatsVM(
-                                    blockchainService.totalApproved(username, null, null, null, null),
-                                    blockchainService.totalSubmitted(username, null, null, null, null),
-                                    blockchainService.totalDraft(username, null, null, null, null),
-                                    blockchainService.totalDeclined(username, null, null, null, null)
-                            )
-                    );
-                }
+
+            if (!sessionService.ensureAuthenticated())
+                return;
+            if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
+                c.configureForLeader(
+                        new DashboardController.LeaderStatsVM(
+                                blockchainService.totalApproved(null, null, null, null),
+                                blockchainService.totalSubmitted(null, null, null, null),
+                                blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()), null, null, null, null)
+                        )
+                );
+            } else {
+                String username = authService.getNameFromToken(App.get().getToken());
+                c.configureForReplica(
+                        new DashboardController.ReplicaStatsVM(
+                                blockchainService.totalApproved(username, null, null, null, null),
+                                blockchainService.totalSubmitted(username, null, null, null, null),
+                                blockchainService.totalDraft(username, null, null, null, null),
+                                blockchainService.totalDeclined(username, null, null, null, null)
+                        )
+                );
             }
         });
 
