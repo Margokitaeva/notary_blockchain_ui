@@ -3,7 +3,6 @@ package com.dp.notary.blockchain.ui;
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
-import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.Role;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.behavior.RoleBehavior;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -56,7 +54,6 @@ public class TransactionFormController {
     private Button draftBtn;
     @FXML
     private Button submitBtn;
-    private final AuthService authService;
     private final SessionService sessionService;
     private BigDecimal parsedAmount;
     private final RoleBehavior roleBehavior;
@@ -92,8 +89,7 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior) {
-        this.authService = authService;
+    public TransactionFormController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior) {
         this.sessionService = sessionService;
         this.roleBehavior = roleBehavior;
     }
@@ -140,8 +136,10 @@ public class TransactionFormController {
 
     @FXML
     private void onCancel() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         actions.onCancel();
@@ -149,8 +147,10 @@ public class TransactionFormController {
 
     @FXML
     private void onSaveDraft() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         if (buildAndValidatePayload()) {
@@ -159,7 +159,7 @@ public class TransactionFormController {
                     txId,
                     Instant.now(),
                     typeCombo.getValue(),
-                    authService.getNameFromToken(App.get().getToken()),
+                    sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
                     targetField.getText(),
@@ -173,8 +173,10 @@ public class TransactionFormController {
 
     @FXML
     private void onSubmit() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         if (buildAndValidatePayload()) {
@@ -183,7 +185,7 @@ public class TransactionFormController {
                     txId,
                     Instant.now(),
                     typeCombo.getValue(),
-                    authService.getNameFromToken(App.get().getToken()),
+                    sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
                     targetField.getText(),
@@ -278,12 +280,14 @@ public class TransactionFormController {
         // - EDIT: original creator (если есть)
         // - CREATE: current user
 
-        createdByLabel.setText(authService.getNameFromToken(App.get().getToken()));
+        createdByLabel.setText(sessionService.getName());
 
         // submit button text by role
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
-        submitBtn.setText(authService.validateRole(App.get().getToken(), Role.LEADER) ? "Submit and approve" : "Submit");
+        }
+        submitBtn.setText(sessionService.validateRole(Role.LEADER) ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {
