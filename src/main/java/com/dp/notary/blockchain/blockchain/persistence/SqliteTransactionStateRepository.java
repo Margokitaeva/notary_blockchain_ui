@@ -120,7 +120,13 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
-    public List<TransactionEntity> findByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter) {
+    public List<TransactionEntity> findByStatus(TransactionStatus status,
+                                                String createdByFilter,
+                                                String initiatorFilter,
+                                                String targetFilter,
+                                                TransactionType typeFilter,
+                                                int offset,
+                                                int limit) {
        if (status == null) {
            return List.of();
        }
@@ -128,6 +134,10 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
         initiatorFilter = trimToNull(initiatorFilter);
         targetFilter    = trimToNull(targetFilter);
         String typeFilterString = typeFilter != null ? typeFilter.name() : null;
+
+        offset = Math.max(0, offset);
+        limit  = Math.max(1, limit);
+
         return jdbc.query(
                """
                            SELECT tx_key,
@@ -138,18 +148,21 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                            amount,
                            target,
                            initiator
-               FROM transactions WHERE status = ?
-                   AND (? IS NULL OR created_by = ?)
-                   AND (? IS NULL OR initiator = ?)
-                   AND (? IS NULL OR target = ?)
-                   AND (? IS NULL OR type = ?)
+                   FROM transactions WHERE status = ?
+                       AND (? IS NULL OR created_by = ?)
+                       AND (? IS NULL OR initiator = ?)
+                       AND (? IS NULL OR target = ?)
+                       AND (? IS NULL OR type = ?)
+                   ORDER BY timestamp DESC
+                   LIMIT ? OFFSET ?
                """,
                 this::mapRow,
                 status.name(),
                 createdByFilter, createdByFilter,
                 initiatorFilter, initiatorFilter,
                 targetFilter, targetFilter,
-                typeFilterString, typeFilterString
+                typeFilterString, typeFilterString,
+                limit, offset
         );
     }
 
