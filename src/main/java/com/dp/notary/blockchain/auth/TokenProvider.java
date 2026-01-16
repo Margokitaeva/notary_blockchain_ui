@@ -1,6 +1,5 @@
 package com.dp.notary.blockchain.auth;
 
-import com.dp.notary.blockchain.Config;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;

@@ -23,7 +23,6 @@ public class LeaderBehavior implements RoleBehavior {
 
     @Override
     public void deleteTransaction(String txId) {
-        System.out.println("Leader");
         blockchainService.deleteTransaction(txId);
         leaderClient.broadcastDeleteDraft(txId);
     }

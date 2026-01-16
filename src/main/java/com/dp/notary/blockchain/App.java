@@ -34,10 +34,7 @@ public class App extends Application {
         instance = this;
         springContext = new SpringApplicationBuilder(SApp.class)
                 .run();
-        try {
-            Config.getInstance().loadConfig();
-        }
-        catch(Exception ignored) {}
+
     }
 
     public static App get() {
