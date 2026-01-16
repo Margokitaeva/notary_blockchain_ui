@@ -87,51 +87,18 @@ public class BlockchainService {
         txRepo.updateStatus(txId, to);
     }
 
-    public int totalApproved(String user,
-                             String createdByFilter,
-                             String initiatorFilter,
-                             String targetFilter,
-                             TransactionType typeFilter) {
-        return txRepo.findByStatus(TransactionStatus.APPROVED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> tx.getCreatedBy().equals(user))
-                .toList()
-                .size()
-                + txRepo.findByStatus(TransactionStatus.SEALED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> tx.getCreatedBy().equals(user))
-                .toList().size();
-    }
-
-    public int totalDraft(String user,
-                          String createdByFilter,
+    public int totalDraft(String createdByFilter,
                           String initiatorFilter,
                           String targetFilter,
                           TransactionType typeFilter) {
-        return txRepo.findByStatus(TransactionStatus.DRAFT, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> tx.getCreatedBy().equals(user))
-                .toList()
-                .size();
+        return txRepo.countByStatus(TransactionStatus.DRAFT, createdByFilter, initiatorFilter, targetFilter, typeFilter);
     }
 
-    public int totalDeclined(String user,
-                             String createdByFilter,
+    public int totalDeclined(String createdByFilter,
                              String initiatorFilter,
                              String targetFilter,
                              TransactionType typeFilter) {
-        return txRepo.findByStatus(TransactionStatus.DECLINED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> tx.getCreatedBy().equals(user))
-                .toList()
-                .size();
-    }
-
-    public int totalSubmitted(String user,
-                              String createdByFilter,
-                              String initiatorFilter,
-                              String targetFilter,
-                              TransactionType typeFilter) {
-        return txRepo.findByStatus(TransactionStatus.SUBMITTED, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> tx.getCreatedBy().equals(user))
-                .toList()
-                .size();
+        return txRepo.countByStatus(TransactionStatus.DECLINED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
     }
 
     public int totalApproved(String createdByFilter,
@@ -153,17 +120,18 @@ public class BlockchainService {
             int from,
             int limit,
             TransactionStatus status,
-            String user,
             String createdByFilter,
             String initiatorFilter,
             String targetFilter,
             TransactionType typeFilter
     ) {
-        return txRepo.findByStatus(status, createdByFilter, initiatorFilter, targetFilter, typeFilter).stream()
-                .filter(tx -> user == null || tx.getCreatedBy().equals(user))
-                .skip((long) from * limit)
-                .limit(limit)
-                .toList();
+        return txRepo.findByStatus(status,
+                    createdByFilter,
+                    initiatorFilter,
+                    targetFilter,
+                    typeFilter,
+                    from * limit,
+                    limit);
     }
 
     public List<TransactionEntity> getApprovedTransactions(
