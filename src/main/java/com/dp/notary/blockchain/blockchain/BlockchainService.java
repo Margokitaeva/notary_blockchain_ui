@@ -27,7 +27,7 @@ public class BlockchainService {
     }
 
     public String addDraft(TransactionEntity tx) {
-        tx.setTxId(UUID.randomUUID().toString());
+//        tx.setTxId(UUID.randomUUID().toString());
         tx.setStatus(TransactionStatus.DRAFT);
         return txRepo.insert(tx);
     }

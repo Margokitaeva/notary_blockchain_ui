@@ -10,6 +10,7 @@ import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import com.dp.notary.blockchain.config.NotaryProperties;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -22,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 @Component
 public class TransactionFormController {
@@ -56,6 +58,7 @@ public class TransactionFormController {
     @FXML
     private Button submitBtn;
     private final AuthService authService;
+    private NotaryProperties props;
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
 
@@ -91,9 +94,10 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient) {
+    public TransactionFormController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient) {
         this.authService = authService;
         this.blockchainService = blockchainService;
+        this.props = props;
         this.sessionService = sessionService;
         this.leaderClient = leaderClient;
         this.replicaClient = replicaClient;
@@ -141,17 +145,23 @@ public class TransactionFormController {
 
     @FXML
     private void onCancel() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         clearError();
         actions.onCancel();
-        // НИЧЕГО не сохраняем → значит timestamp/данные останутся старые
     }
 
     @FXML
     private void onSaveDraft() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         clearError();
         if (buildAndValidatePayload()) {
+            String txId = (existing!=null) ? existing.id() : UUID.randomUUID().toString();
             TransactionEntity tx = new TransactionEntity(
-                    "хуй",
+                    txId,
                     Instant.now(),
                     typeCombo.getValue(),
                     authService.getNameFromToken(App.get().getToken()),
@@ -161,11 +171,23 @@ public class TransactionFormController {
                     initiatorField.getText()
             );
 
-            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
-                blockchainService.addDraft(tx);
-                leaderClient.broadcastAddDraft(tx);
-            } else {
-                replicaClient.addDraft(tx);
+            if (mode == FormMode.EDIT) {
+                if (Objects.equals(props.role(), "LEADER")) {
+                    blockchainService.editDraft(tx);
+                    leaderClient.broadcastEditDraft(tx);
+                } else {
+                    replicaClient.editDraft(tx);
+                }
+
+            }
+            else {
+                if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+                    blockchainService.addDraft(tx);
+                    leaderClient.broadcastAddDraft(tx);
+                } else {
+                    replicaClient.addDraft(tx);
+                }
+
             }
             actions.onSaveDraft();
         }
@@ -174,10 +196,14 @@ public class TransactionFormController {
 
     @FXML
     private void onSubmit() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         clearError();
         if (buildAndValidatePayload()) {
+            String txId = (existing!=null) ? existing.id() : UUID.randomUUID().toString();
             TransactionEntity tx = new TransactionEntity(
-                    "хуй",
+                    txId,
                     Instant.now(),
                     typeCombo.getValue(),
                     authService.getNameFromToken(App.get().getToken()),
@@ -186,16 +212,32 @@ public class TransactionFormController {
                     targetField.getText(),
                     initiatorField.getText()
             );
-            String txId = blockchainService.addDraft(tx);
-            blockchainService.submitTransaction(txId);
+            if (mode == FormMode.EDIT) {
+                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
+                    blockchainService.editDraft(tx);
+                    leaderClient.broadcastEditDraft(tx);
+                }
+                else {
+                    replicaClient.editDraft(tx);
+                }
+                txId = existing.id();
+            }
+            else {
+                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
+                    txId = blockchainService.addDraft(tx);
+                    leaderClient.broadcastAddDraft(tx);
+                }
+                else {
+                    replicaClient.addDraft(tx); // TODO: add id post back if have time
+                }
+            }
 
             boolean approveImmediately = false;
 
-            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
-                if (!sessionService.ensureAuthenticated())
-                    return;
+            if (Objects.equals(props.role(), "LEADER")) {
                 if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
                     approveImmediately = true;
+                    blockchainService.submitTransaction(txId);
                     blockchainService.approve(txId);
                     leaderClient.broadcastSubmit(txId);
                     leaderClient.broadcastApprove(txId);
@@ -204,9 +246,8 @@ public class TransactionFormController {
                 replicaClient.submit(txId);
             }
 
-
             // create draft -> change status submit -> approve
-            // replica: draft -> change status sbumit
+            // replica: draft -> change status submit
 
             actions.onSubmit(approveImmediately);
         }

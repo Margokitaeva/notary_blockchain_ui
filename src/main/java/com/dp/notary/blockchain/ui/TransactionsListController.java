@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.*;
 import com.dp.notary.blockchain.config.NotaryProperties;
@@ -102,6 +103,7 @@ public class TransactionsListController {
     private String targetFilter;
     private TransactionType typeFilter;
 
+
     private Actions actions = new Actions() {
         @Override public void onEdit(TransactionRowVM tx) { System.out.println("Edit: ");}
         @Override public void onDelete() { System.out.println("Delete: "); }
@@ -121,13 +123,15 @@ public class TransactionsListController {
     private NotaryProperties props;
     private LeaderClient leaderClient;
     private ReplicaClient replicaClient;
+    private final SessionService sessionService;
 
     // ================== PUBLIC API ==================
 
-    TransactionsListController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, LeaderClient leaderClient, ReplicaClient replicaClient){
+    TransactionsListController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient){
         this.authService = authService;
         this.blockchainService = blockchainService;
         this.props = props;
+        this.sessionService = sessionService;
         this.leaderClient = leaderClient;
         this.replicaClient = replicaClient;
     }
@@ -218,6 +222,9 @@ public class TransactionsListController {
 
     @FXML
     private void onClearFilters() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         filterCreatedBy.clear();
         filterInitiator.clear();
         filterTarget.clear();
@@ -229,6 +236,9 @@ public class TransactionsListController {
 
     @FXML
     private void onApplyFilters() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         // apply filters
         createdByFilter = trimToNull(filterCreatedBy.getText());
         initiatorFilter = trimToNull(filterInitiator.getText());
@@ -307,6 +317,9 @@ public class TransactionsListController {
 
     @FXML
     private void onEdit() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
 
         if (tx == null) return;
@@ -316,6 +329,8 @@ public class TransactionsListController {
 
     @FXML
     private void onDelete() {
+        if (!sessionService.ensureAuthenticated())
+            return;
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
 
         if (tx == null) return;
@@ -331,6 +346,8 @@ public class TransactionsListController {
 
     @FXML
     private void onApprove() {
+        if (!sessionService.ensureAuthenticated())
+            return;
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         if(Objects.equals(props.role(), "LEADER") ){
@@ -342,6 +359,9 @@ public class TransactionsListController {
 
     @FXML
     private void onDecline() {
+        if (!sessionService.ensureAuthenticated())
+            return;
+
 //        if (table.getSelectionModel().getSelectedItem() == null) return;
 //        declineBox.setVisible(true);
 //        declineBox.setManaged(true);
@@ -371,6 +391,8 @@ public class TransactionsListController {
 
     @FXML
     private void onResubmit() {
+        if (!sessionService.ensureAuthenticated())
+            return;
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         if(Objects.equals(props.role(), "LEADER")){
@@ -415,6 +437,8 @@ public class TransactionsListController {
     // ================== PAGINATION ==================
 
     private void loadPage(int page) {
+        if (!sessionService.ensureAuthenticated())
+            return;
 //        int fromBlock = page * BLOCKS_PER_PAGE;
 //        int blockCount = BLOCKS_PER_PAGE;
 
