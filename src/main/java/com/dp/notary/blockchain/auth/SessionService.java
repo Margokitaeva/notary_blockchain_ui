@@ -1,33 +1,42 @@
 package com.dp.notary.blockchain.auth;
 
-import com.dp.notary.blockchain.App;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Slf4j
 @Component
 public class SessionService {
 
     private final AuthService authService;
-
+    private String token = "";
     public SessionService(AuthService authService) {
         this.authService = authService;
     }
 
-    public void logout() throws IOException {
-        App.get().setToken(null);
-        App.get().showLogin();
+    public boolean signUp(String name, String passwordHash){
+        return authService.signUp(name, passwordHash);
+    }
+    public boolean login(String name, String passwordHash){
+        this.token = authService.login(name, passwordHash);
+        return Objects.equals(token, "");
     }
 
-    public boolean ensureAuthenticated() {
-        if (authService.validateToken(App.get().getToken()) == null) {
-            try {
-                logout();
-            } catch (IOException ignored) {}
-            return false;
-        }
-        return true;
+    public boolean isAuthenticated() {
+        this.token = authService.validateToken(token);
+        return !Objects.equals(token, "");
+    }
+
+    public String getName(){
+        return authService.getNameFromToken(token);
+    }
+    public Role getRole(){
+        return authService.getRoleFromToken(token);
+    }
+
+    public boolean validateRole(Role role){
+        return isAuthenticated() && authService.validateRole(token, role);
     }
 }

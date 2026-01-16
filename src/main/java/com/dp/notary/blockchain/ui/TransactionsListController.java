@@ -3,15 +3,11 @@ package com.dp.notary.blockchain.ui;
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
-import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.behavior.RoleBehavior;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.*;
 import com.dp.notary.blockchain.config.NotaryProperties;
-import jakarta.annotation.PostConstruct;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -118,15 +114,13 @@ public class TransactionsListController {
                     .withZone(ZoneId.systemDefault());
 
     // ================== MODULES ==================
-    private AuthService authService;
     private BlockchainService blockchainService;
     private final SessionService sessionService;
     private final RoleBehavior roleBehavior;
 
     // ================== PUBLIC API ==================
 
-    TransactionsListController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior){
-        this.authService = authService;
+    TransactionsListController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior){
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
         this.roleBehavior = roleBehavior;
@@ -218,8 +212,10 @@ public class TransactionsListController {
 
     @FXML
     private void onClearFilters() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         filterCreatedBy.clear();
         filterInitiator.clear();
@@ -232,8 +228,10 @@ public class TransactionsListController {
 
     @FXML
     private void onApplyFilters() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         // apply filters
         createdByFilter = trimToNull(filterCreatedBy.getText());
@@ -313,8 +311,10 @@ public class TransactionsListController {
 
     @FXML
     private void onEdit() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
 
@@ -324,8 +324,11 @@ public class TransactionsListController {
 
     @FXML
     private void onDelete() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
+
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
 
         if (tx == null) return;
@@ -336,8 +339,11 @@ public class TransactionsListController {
 
     @FXML
     private void onApprove() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
+
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         roleBehavior.approveTransaction(tx.id());
@@ -346,8 +352,11 @@ public class TransactionsListController {
 
     @FXML
     private void onDecline() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
+
 
 //        if (table.getSelectionModel().getSelectedItem() == null) return;
 //        declineBox.setVisible(true);
@@ -373,8 +382,11 @@ public class TransactionsListController {
 
     @FXML
     private void onResubmit() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
+
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
         roleBehavior.resubmit(tx.id());
@@ -414,8 +426,10 @@ public class TransactionsListController {
     // ================== PAGINATION ==================
 
     private void loadPage(int page) {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 //        int fromBlock = page * BLOCKS_PER_PAGE;
 //        int blockCount = BLOCKS_PER_PAGE;
 
@@ -434,7 +448,7 @@ public class TransactionsListController {
         else if (mode == Mode.PENDING)
             txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), createdByFilter, initiatorFilter, targetFilter, typeFilter);
         else
-            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), authService.getNameFromToken(App.get().getToken()), initiatorFilter, targetFilter, typeFilter);
+            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), sessionService.getName(), initiatorFilter, targetFilter, typeFilter);
 
 
         pageTransactions.setAll(txs.stream().map(TransactionRowVM::new).toList());
@@ -444,7 +458,7 @@ public class TransactionsListController {
     }
 
     private int getPageCount() {
-        String username = authService.getNameFromToken(App.get().getToken());
+        String username = sessionService.getName();
         int total;
         switch (mode) {
             case APPROVED -> total = blockchainService.totalApproved(createdByFilter, initiatorFilter, targetFilter, typeFilter);

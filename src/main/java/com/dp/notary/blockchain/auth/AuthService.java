@@ -54,7 +54,7 @@ public class AuthService {
             // если просрочен — обновляем
             return tokenProvider.refreshToken(token);
         } catch (Exception e) {
-            return null; // токен невалидный
+            return ""; // токен невалидный
         }
     }
 

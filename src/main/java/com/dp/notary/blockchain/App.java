@@ -26,9 +26,6 @@ public class App extends Application {
     // размеры окна для auth
     private static final double AUTH_W = 420;
     private static final double AUTH_H = 520;
-    @Getter
-    @Setter
-    private String token = "";
     @Override
     public void init() {
         instance = this;
@@ -42,7 +39,7 @@ public class App extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
 
 //        Application.setUserAgentStylesheet(
 //                new Dracula().getUserAgentStylesheet()
@@ -77,17 +74,23 @@ public class App extends Application {
 
     // Navigation
 
-    public void showLogin() throws IOException {
-        setScene(loadFXML("/fxml/LoginView.fxml"), AUTH_W, AUTH_H);
+    public void showLogin() {
+        try {
+            setScene(loadFXML("/fxml/LoginView.fxml"), AUTH_W, AUTH_H);
+        }catch (Exception ignore) {}
     }
 
-    public void showSignup() throws IOException {
+    public void showSignup() {
+        try {
         setScene(loadFXML("/fxml/SignupView.fxml"), AUTH_W, AUTH_H);
+    }catch (Exception ignore) {}
     }
 
     // пока просто заглушка "после логина"
-    public void showMain() throws IOException {
+    public void showMain() {
+        try {
         setScene(loadFXML("/fxml/MainView.fxml"), 1000, 700);
+    }catch (Exception ignore) {}
     }
 
     // Inside helpers
@@ -98,10 +101,14 @@ public class App extends Application {
         stage.centerOnScreen();
     }
 
-    private Parent loadFXML(String path) throws IOException {
+    private Parent loadFXML(String path) {
+        try {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(path));
         loader.setControllerFactory(springContext::getBean);
         return loader.load();
+        }catch (Exception ignore) {
+            return null;
+        }
     }
 
     public static void main(String[] args) {
