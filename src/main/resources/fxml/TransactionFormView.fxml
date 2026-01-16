@@ -12,7 +12,7 @@
 
     <!-- HEADER -->
     <VBox spacing="4">
-        <Label fx:id="formTitle" text="New Transaction" styleClass="txform-title"/>
+        <Label fx:id="formTitle" text="Create New Transaction" styleClass="txform-title"/>
         <Label fx:id="formSubtitle" text="Fill in fields and submit or save as draft." styleClass="txform-subtitle"/>
     </VBox>
 
@@ -57,7 +57,7 @@
 
         <!-- Amount -->
         <Label text="Amount" styleClass="txform-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="amountField" promptText="integer"
+        <TextField fx:id="amountField" promptText="number"
                    styleClass="txform-input"
                    GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 

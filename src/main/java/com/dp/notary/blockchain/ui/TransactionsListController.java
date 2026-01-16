@@ -39,6 +39,8 @@ public class TransactionsListController {
     @FXML private TextField filterInitiator;
     @FXML private TextField filterTarget;
 
+    @FXML private Label createdByLabel;
+
     @FXML private ComboBox<TypeFilterItem> filterType;
 
     // ===== TABLE =====
@@ -50,7 +52,7 @@ public class TransactionsListController {
     @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
     @FXML private TableColumn<TransactionRowVM, String> colInitiator;
     @FXML private TableColumn<TransactionRowVM, String> colTarget;
-    @FXML private TableColumn<TransactionRowVM, Number> colAmount;
+    @FXML private TableColumn<TransactionRowVM, String> colAmount;
 
     @FXML
     private HBox paginationTop;
@@ -132,10 +134,15 @@ public class TransactionsListController {
         initiatorFilter = null;
         targetFilter = null;
         typeFilter = null;
+
+        updateCreatedByVisibility();
+
         loadPage(0);
         updateDetails(null);
         refreshActions();        // buttons depend on mode + status
         updateDetails(table.getSelectionModel().getSelectedItem());
+
+
     }
 
     public void setActions(Actions actions) {
@@ -164,7 +171,7 @@ public class TransactionsListController {
         colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().createdBy())));
         colInitiator.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().initiator())));
         colTarget.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().target())));
-        colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colAmount.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().amount()));
 
         // TableView built-in sorting works via comparatorProperty binding (we do it below)
         // Ensure columns are sortable (default true), keep it explicit:
@@ -240,6 +247,18 @@ public class TransactionsListController {
         typeFilter = filterType.getValue() != null ? filterType.getValue().type() : null;
 
         loadPage(0);
+    }
+
+    private void updateCreatedByVisibility() {
+        boolean showCreatedBy = mode == Mode.APPROVED || mode == Mode.PENDING;
+
+        createdByLabel.setVisible(showCreatedBy);
+        createdByLabel.setManaged(showCreatedBy);
+
+        filterCreatedBy.setVisible(showCreatedBy);
+        filterCreatedBy.setManaged(showCreatedBy);
+
+        colCreatedBy.setVisible(showCreatedBy);
     }
 
     // ================== DETAILS ==================

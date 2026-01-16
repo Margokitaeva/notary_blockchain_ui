@@ -122,7 +122,7 @@
                 <Label styleClass="tx-field-label" text="Type" />
                 <Label fx:id="detailsType" styleClass="tx-field-value" text="—" />
 
-                <Label styleClass="tx-field-label" text="Created by" />
+                <Label styleClass="tx-field-label" fx:id="createdByLabel" text="Created by" />
                 <Label fx:id="detailsCreatedBy" styleClass="tx-field-value" text="—" />
 
                 <Label styleClass="tx-field-label" text="Initiator" />

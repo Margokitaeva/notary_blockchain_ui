@@ -1,14 +1,14 @@
 # notary_blockchain_ui
 
 TO DO:
-- [ ] подключить получение owners and their shares in Dashboard
 - [ ] сделать проверки успешности операций
 - [ ] сделать пост для возврата id когда реплика создает черновик (onSaveDraft, onSubmit in TransactionFormController)
- 
+
 UI:
-- [ ] удалить фильтр created by для соответствующих вкладок
-- [ ] сделать чтобы автоматически открывался dashboard а не надпись Content will be here
 - [ ] подключить получение owners and their shares in Dashboard
+- [x] удалить фильтр created by для соответствующих вкладок
+- [x] сделать чтобы автоматически открывался dashboard а не надпись Content will be here
+
 
 Done:
 - [x] сделать нормальное запрашивание транзакций в TransactionsListController (не по блокам)
@@ -22,3 +22,4 @@ Done:
 - [x] перенести фильтрацию по юзеру и обрезание в дб
 - [x] добавить проверку токена при операциях 
 - [x] проверить что везде правильные проверки ролей (нода - пользователь)
+- [x] пофиксить чтобы amount отображалось
