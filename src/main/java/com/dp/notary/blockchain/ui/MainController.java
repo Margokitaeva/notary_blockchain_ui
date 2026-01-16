@@ -175,16 +175,10 @@ public class MainController {
     @FXML
     private void onLogout() {
         try {
-            logout();
+            sessionService.logout();
         }
         catch (IOException ignored) {}
     }
-
-    private void logout() throws IOException {
-        App.get().setToken(null);
-        App.get().showLogin();
-    }
-
     // ===== HELPERS =====
 
     private void clearContent() {

@@ -15,49 +15,52 @@
         <Label fx:id="companyNameLabel"
                styleClass="page-title"
                text="Company name"
-               BorderPane.alignment="CENTER_LEFT"
-               padding="0 0 12 0"/>
+               BorderPane.alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="0" right="0" bottom="16" left="0"/>
+            </padding>
+        </Label>
     </top>
 
-    <!-- CENTER: table + filters -->
+    <!-- CENTER: main content -->
     <center>
-        <VBox spacing="10">
+        <HBox spacing="32">
 
-            <!-- Filter -->
-            <HBox spacing="10">
-                <VBox>
+            <!-- LEFT: filter + table (takes all remaining space) -->
+            <VBox spacing="12" HBox.hgrow="ALWAYS">
+
+                <!-- Filter -->
+                <VBox spacing="4">
                     <Label text="Filter by owner"/>
                     <TextField fx:id="ownerFilterField"
-                               promptText="Owner name"/>
+                               promptText="Owner name"
+                               maxWidth="260"/>
                 </VBox>
-            </HBox>
 
             <!-- Table -->
             <TableView fx:id="sharesTable"
                        VBox.vgrow="ALWAYS">
 
-                <columns>
-                    <TableColumn fx:id="ownerCol"
-                                 text="Owner"/>
-                    <TableColumn fx:id="sharesCol"
-                                 text="Shares"/>
-                </columns>
-            </TableView>
+                    <columns>
+                        <TableColumn fx:id="ownerCol" text="Owner"/>
+                        <TableColumn fx:id="sharesCol" text="Shares"/>
+                    </columns>
+                </TableView>
 
-            <!-- Footer -->
-            <Label fx:id="totalSharesLabel"
-                   text="Total shares: 0"
-                   styleClass="footer-label"/>
-        </VBox>
+                <!-- Footer -->
+                <Label fx:id="totalSharesLabel" text="Total shares: 0" styleClass="total-label"/>
+            </VBox>
+
+            <!-- RIGHT: stats (fixed comfortable width) -->
+            <VBox fx:id="statsBox"
+                  styleClass="stats-box"
+                  spacing="24"
+                  alignment="TOP_CENTER"
+                  />
+        </HBox>
     </center>
 
-    <!-- RIGHT: stats -->
-    <right>
-        <VBox fx:id="statsBox"
-              spacing="20"
-              padding="0 0 0 24"/>
-    </right>
-
+    <!-- Global padding -->
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
