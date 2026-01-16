@@ -12,7 +12,7 @@
 
     <!-- HEADER -->
     <VBox spacing="4">
-        <Label fx:id="formTitle" text="New Transaction" styleClass="txform-title"/>
+        <Label fx:id="formTitle" text="Create New Transaction" styleClass="txform-title"/>
         <Label fx:id="formSubtitle" text="Fill in fields and submit or save as draft." styleClass="txform-subtitle"/>
     </VBox>
 

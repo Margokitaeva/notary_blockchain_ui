@@ -39,6 +39,8 @@ public class TransactionsListController {
     @FXML private TextField filterInitiator;
     @FXML private TextField filterTarget;
 
+    @FXML private Label createdByLabel;
+
     @FXML private ComboBox<TypeFilterItem> filterType;
 
     // ===== TABLE =====
@@ -132,10 +134,15 @@ public class TransactionsListController {
         initiatorFilter = null;
         targetFilter = null;
         typeFilter = null;
+
+        updateCreatedByVisibility();
+
         loadPage(0);
         updateDetails(null);
         refreshActions();        // buttons depend on mode + status
         updateDetails(table.getSelectionModel().getSelectedItem());
+
+
     }
 
     public void setActions(Actions actions) {
@@ -240,6 +247,18 @@ public class TransactionsListController {
         typeFilter = filterType.getValue() != null ? filterType.getValue().type() : null;
 
         loadPage(0);
+    }
+
+    private void updateCreatedByVisibility() {
+        boolean showCreatedBy = mode == Mode.APPROVED || mode == Mode.PENDING;
+
+        createdByLabel.setVisible(showCreatedBy);
+        createdByLabel.setManaged(showCreatedBy);
+
+        filterCreatedBy.setVisible(showCreatedBy);
+        filterCreatedBy.setManaged(showCreatedBy);
+
+        colCreatedBy.setVisible(showCreatedBy);
     }
 
     // ================== DETAILS ==================

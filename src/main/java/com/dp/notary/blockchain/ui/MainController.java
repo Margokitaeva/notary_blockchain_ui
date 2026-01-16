@@ -48,7 +48,7 @@ public class MainController {
     @FXML
     private void initialize() {
         setUser(sessionService.getName(), sessionService.getRole());
-        setPageTitle("Dashboard");
+        openDashboard();
     }
 
     // ===== PUBLIC API (потом дергать из App/Auth) =====
@@ -83,46 +83,7 @@ public class MainController {
 
     @FXML
     private void onDashboard() {
-        setPageTitle("Dashboard");
-        clearContent(); // comment this
-        // TODO: uncomment everything below when connect to existing functions
-        loadIntoContent("/fxml/DashboardView.fxml", controller -> {
-            DashboardController c = (DashboardController) controller;
-
-            c.setCompany(new DashboardController.CompanyVM("H&P.Co"));
-
-//            // TODO ledger state -> shares per owner
-//            c.setSharesData(
-//                    /* List<OwnerSharesVM> */,
-//                    /* totalShares */
-//            );
-            // вынести первый иф в отдельную функцию
-
-            if (!sessionService.isAuthenticated()){
-                App.get().showLogin();
-                return;
-            }
-            if (sessionService.validateRole(Role.LEADER)) {
-                c.configureForLeader(
-                        new DashboardController.LeaderStatsVM(
-                                blockchainService.totalApproved(null, null, null, null),
-                                blockchainService.totalSubmitted(null, null, null, null),
-                                blockchainService.totalDraft(sessionService.getName(), null, null, null)
-                        )
-                );
-            } else {
-                String username = sessionService.getName();
-                c.configureForReplica(
-                        new DashboardController.ReplicaStatsVM(
-                                blockchainService.totalApproved(username, null, null, null),
-                                blockchainService.totalSubmitted(username, null, null, null),
-                                blockchainService.totalDraft(username, null, null, null),
-                                blockchainService.totalDeclined(username, null, null, null)
-                        )
-                );
-            }
-        });
-
+        openDashboard();
     }
 
     @FXML
@@ -327,6 +288,48 @@ public class MainController {
                     }
                 }
             });
+        });
+    }
+
+    private void openDashboard() {
+        setPageTitle("Dashboard");
+//        clearContent(); // comment this
+        // TODO: uncomment everything below when connect to existing functions
+        loadIntoContent("/fxml/DashboardView.fxml", controller -> {
+            DashboardController c = (DashboardController) controller;
+
+            c.setCompany(new DashboardController.CompanyVM("H&P.Co"));
+
+//            // TODO ledger state -> shares per owner
+//            c.setSharesData(
+//                    /* List<OwnerSharesVM> */,
+//                    /* totalShares */
+//            );
+            // вынести первый иф в отдельную функцию
+
+            if (!sessionService.isAuthenticated()){
+                App.get().showLogin();
+                return;
+            }
+            if (sessionService.validateRole(Role.LEADER)) {
+                c.configureForLeader(
+                        new DashboardController.LeaderStatsVM(
+                                blockchainService.totalApproved(null, null, null, null),
+                                blockchainService.totalSubmitted(null, null, null, null),
+                                blockchainService.totalDraft(sessionService.getName(), null, null, null)
+                        )
+                );
+            } else {
+                String username = sessionService.getName();
+                c.configureForReplica(
+                        new DashboardController.ReplicaStatsVM(
+                                blockchainService.totalApproved(username, null, null, null),
+                                blockchainService.totalSubmitted(username, null, null, null),
+                                blockchainService.totalDraft(username, null, null, null),
+                                blockchainService.totalDeclined(username, null, null, null)
+                        )
+                );
+            }
         });
     }
 
