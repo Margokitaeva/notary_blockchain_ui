@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@EnableConfigurationProperties({NotaryProperties.class, ReplicaProperties.class})
+@EnableConfigurationProperties({NotaryProperties.class})
 public class AppConfig {
     @Bean
     public RestClient restClient(RestClient.Builder builder) {

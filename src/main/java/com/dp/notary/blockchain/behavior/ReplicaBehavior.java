@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
-@ConditionalOnProperty(name = "notary.role", havingValue = "LEADER")
+@ConditionalOnProperty(name = "notary.role", havingValue = "REPLICA")
 public class ReplicaBehavior implements RoleBehavior {
     private ReplicaClient replicaClient;
     ReplicaBehavior(ReplicaClient replicaClient) {

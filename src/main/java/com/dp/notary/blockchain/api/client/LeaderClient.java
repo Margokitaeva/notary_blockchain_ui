@@ -43,23 +43,23 @@ public class LeaderClient {
     private void broadcast(String path, Object body) {
         for (String replica : props.replicas()) {
             client.post()
-                    .uri(replica + path)
-                    .body(body);
+                    .uri(replica + path).body(body).retrieve().toBodilessEntity();
+                    ;
         }
     }
 
     private void broadcastDelete(String path) {
         for (String replica : props.replicas()) {
             client.delete()
-                    .uri(replica + path);
+                    .uri(replica + path)
+                    .retrieve().toBodilessEntity();
         }
     }
 
     private void broadcastPut(String path, Object body) {
         for (String replica : props.replicas()) {
             client.put()
-                    .uri(replica + path)
-                    .body(body);
+                    .uri(replica + path).body(body).retrieve().toBodilessEntity();
         }
     }
 }
