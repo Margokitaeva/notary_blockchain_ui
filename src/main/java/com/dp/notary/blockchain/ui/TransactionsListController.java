@@ -5,6 +5,7 @@ import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.SessionService;
+import com.dp.notary.blockchain.behavior.RoleBehavior;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.*;
 import com.dp.notary.blockchain.config.NotaryProperties;
@@ -119,20 +120,16 @@ public class TransactionsListController {
     // ================== MODULES ==================
     private AuthService authService;
     private BlockchainService blockchainService;
-    private NotaryProperties props;
-    private LeaderClient leaderClient;
-    private ReplicaClient replicaClient;
     private final SessionService sessionService;
+    private final RoleBehavior roleBehavior;
 
     // ================== PUBLIC API ==================
 
-    TransactionsListController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient){
+    TransactionsListController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior){
         this.authService = authService;
         this.blockchainService = blockchainService;
-        this.props = props;
         this.sessionService = sessionService;
-        this.leaderClient = leaderClient;
-        this.replicaClient = replicaClient;
+        this.roleBehavior = roleBehavior;
     }
 
     public void setMode(Mode mode) {
@@ -322,7 +319,6 @@ public class TransactionsListController {
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
 
         if (tx == null) return;
-//TODO:? Тут чтото должно быть или имплементация в другом месте
         actions.onEdit(tx);
     }
 
@@ -334,12 +330,7 @@ public class TransactionsListController {
 
         if (tx == null) return;
         if (!(tx.status == TransactionStatus.DRAFT || tx.status == TransactionStatus.DECLINED)) return;
-        if(Objects.equals(props.role(), "LEADER")){
-            blockchainService.deleteTransaction(tx.id());
-            leaderClient.broadcastDeleteDraft(tx.id());
-        }else{
-            replicaClient.deleteDraft(tx.id());
-        }
+        roleBehavior.deleteTransaction(tx.id());
         actions.onDelete();
     }
 
@@ -349,10 +340,7 @@ public class TransactionsListController {
             return;
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
-        if(Objects.equals(props.role(), "LEADER") ){
-            blockchainService.approve(tx.id());
-            leaderClient.broadcastApprove(tx.id());
-        }
+        roleBehavior.approveTransaction(tx.id());
         actions.onApprove();
     }
 
@@ -367,12 +355,7 @@ public class TransactionsListController {
 //        declineCommentArea.requestFocus();
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
-
-
-        if(Objects.equals(props.role(), "LEADER")){
-            blockchainService.decline(tx.id());
-            leaderClient.broadcastApprove(tx.id());
-        }
+        roleBehavior.declineTransaction(tx.id());
         actions.onDecline();
     }
 
@@ -394,12 +377,7 @@ public class TransactionsListController {
             return;
         TransactionRowVM tx = table.getSelectionModel().getSelectedItem();
         if (tx == null) return;
-        if(Objects.equals(props.role(), "LEADER")){
-            blockchainService.submitTransaction(tx.id());
-            leaderClient.broadcastDeleteDraft(tx.id());
-        }else{
-            replicaClient.submit(tx.id());
-        }
+        roleBehavior.resubmit(tx.id());
         actions.onResubmit();
     }
 
