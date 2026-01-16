@@ -240,6 +240,7 @@ public class MainController {
 
         setPageTitle(
                 switch (mode) {
+                    case APPROVED -> "Transactions";
                     case PENDING -> "Pending transactions";
                     case DRAFTS -> "Drafts";
                     case MY_SUBMITTED -> "My submitted transactions";

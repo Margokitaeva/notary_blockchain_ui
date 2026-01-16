@@ -57,7 +57,7 @@
 
         <!-- Amount -->
         <Label text="Amount" styleClass="txform-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <TextField fx:id="amountField" promptText="integer"
+        <TextField fx:id="amountField" promptText="number"
                    styleClass="txform-input"
                    GridPane.rowIndex="3" GridPane.columnIndex="1"/>
 

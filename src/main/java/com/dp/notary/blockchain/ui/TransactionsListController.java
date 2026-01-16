@@ -50,7 +50,7 @@ public class TransactionsListController {
     @FXML private TableColumn<TransactionRowVM, String> colCreatedBy;
     @FXML private TableColumn<TransactionRowVM, String> colInitiator;
     @FXML private TableColumn<TransactionRowVM, String> colTarget;
-    @FXML private TableColumn<TransactionRowVM, Number> colAmount;
+    @FXML private TableColumn<TransactionRowVM, String> colAmount;
 
     @FXML
     private HBox paginationTop;
@@ -164,7 +164,7 @@ public class TransactionsListController {
         colCreatedBy.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().createdBy())));
         colInitiator.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().initiator())));
         colTarget.setCellValueFactory(c -> new SimpleStringProperty(nullToDash(c.getValue().target())));
-        colAmount.setCellValueFactory(new PropertyValueFactory<>("amount"));
+        colAmount.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().amount()));
 
         // TableView built-in sorting works via comparatorProperty binding (we do it below)
         // Ensure columns are sortable (default true), keep it explicit:
