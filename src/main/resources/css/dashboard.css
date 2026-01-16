@@ -7,11 +7,26 @@
     -fx-background-insets: 0;
 }
 
+.total-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
 .stat-value {
-    -fx-font-size: 28px;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
 }
 
 .stat-label {
     -fx-opacity: 0.7;
+    -fx-text-alignment: center;
 }
+
+.stats-box {
+    -fx-padding: 90 0 0 0;   /* top right bottom left */
+    -fx-alignment: top-center;
+}
+
+
+
+

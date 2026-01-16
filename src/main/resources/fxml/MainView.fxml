@@ -29,7 +29,7 @@
 
             <!-- role-based -->
             <Button fx:id="pendingBtn"
-                    text="Pending Transactions"
+                    text="Pending transactions"
                     onAction="#onPending"
                     styleClass="nav-btn"/>
 

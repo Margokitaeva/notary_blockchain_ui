@@ -7,7 +7,9 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DashboardController {
 
     /* =======================
@@ -41,6 +43,11 @@ public class DashboardController {
     public void initialize() {
         setupTable();
         setupFiltering();
+
+//        statsBox.setAlignment(javafx.geometry.Pos.TOP_CENTER);
+//
+//        // 👉 отступ сверху, чтобы начать на уровне таблицы
+//        statsBox.setPadding(new javafx.geometry.Insets(90, 0, 0, 0));
     }
 
     private void setupTable() {
@@ -117,8 +124,12 @@ public class DashboardController {
 
         Label textLabel = new Label(label);
         textLabel.getStyleClass().add("stat-label");
+        textLabel.setWrapText(true);
 
-        return new VBox(4, valueLabel, textLabel);
+        VBox box = new VBox(6, valueLabel, textLabel);
+        box.setAlignment(javafx.geometry.Pos.CENTER);
+
+        return box;
     }
 
     /* =======================
