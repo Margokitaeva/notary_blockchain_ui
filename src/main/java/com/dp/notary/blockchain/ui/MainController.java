@@ -1,11 +1,9 @@
 package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
-import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
-import jakarta.websocket.Session;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -17,9 +15,6 @@ import com.dp.notary.blockchain.auth.Role;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.function.Consumer;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Component
 public class MainController {
@@ -41,12 +36,10 @@ public class MainController {
     // for cancel to return list, that was before
     private TransactionsListController.Mode lastTxListMode = TransactionsListController.Mode.PENDING;
 
-    private final AuthService authService;
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
 
-    public MainController(AuthService authService, BlockchainService blockchainService, SessionService sessionService) {
-        this.authService = authService;
+    public MainController(BlockchainService blockchainService, SessionService sessionService) {
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
     }
@@ -54,7 +47,7 @@ public class MainController {
     // ===== INIT =====
     @FXML
     private void initialize() {
-        setUser(authService.getNameFromToken(App.get().getToken()), authService.getRoleFromToken((App.get().getToken())));
+        setUser(sessionService.getName(), sessionService.getRole());
         setPageTitle("Dashboard");
     }
 
@@ -65,11 +58,14 @@ public class MainController {
         userNameLabel.setText("User: " + fullName);
         roleLabel.setText("Role: " + role.displayName());
 
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
-        boolean isLeader = authService.validateRole(App.get().getToken(), Role.LEADER);
-        boolean isReplica = authService.validateRole(App.get().getToken(), Role.REPLICA);
+
+        boolean isLeader = sessionService.validateRole(Role.LEADER);
+        boolean isReplica = sessionService.validateRole(Role.REPLICA);
 
         pendingBtn.setVisible(isLeader);
         pendingBtn.setManaged(isLeader);
@@ -102,18 +98,20 @@ public class MainController {
 //            );
             // вынести первый иф в отдельную функцию
 
-            if (!sessionService.ensureAuthenticated())
+            if (!sessionService.isAuthenticated()){
+                App.get().showLogin();
                 return;
-            if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
+            }
+            if (sessionService.validateRole(Role.LEADER)) {
                 c.configureForLeader(
                         new DashboardController.LeaderStatsVM(
                                 blockchainService.totalApproved(null, null, null, null),
                                 blockchainService.totalSubmitted(null, null, null, null),
-                                blockchainService.totalDraft(authService.getNameFromToken(App.get().getToken()), null, null, null)
+                                blockchainService.totalDraft(sessionService.getName(), null, null, null)
                         )
                 );
             } else {
-                String username = authService.getNameFromToken(App.get().getToken());
+                String username = sessionService.getName();
                 c.configureForReplica(
                         new DashboardController.ReplicaStatsVM(
                                 blockchainService.totalApproved(username, null, null, null),
@@ -174,11 +172,9 @@ public class MainController {
 
     @FXML
     private void onLogout() {
-        try {
-            sessionService.logout();
-        }
-        catch (IOException ignored) {}
+        App.get().showLogin();
     }
+
     // ===== HELPERS =====
 
     private void clearContent() {

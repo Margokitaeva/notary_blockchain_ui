@@ -3,9 +3,9 @@ package com.dp.notary.blockchain.ui;
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
-import com.dp.notary.blockchain.auth.AuthService;
 import com.dp.notary.blockchain.auth.Role;
 import com.dp.notary.blockchain.auth.SessionService;
+import com.dp.notary.blockchain.behavior.RoleBehavior;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
@@ -21,15 +21,12 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
 @Component
 public class TransactionFormController {
 
-    private final LeaderClient leaderClient;
-    private final ReplicaClient replicaClient;
     // ===== UI =====
     @FXML
     private Label formTitle;
@@ -57,11 +54,10 @@ public class TransactionFormController {
     private Button draftBtn;
     @FXML
     private Button submitBtn;
-    private final AuthService authService;
-    private final BlockchainService blockchainService;
     private final SessionService sessionService;
-    private final NotaryProperties props;
     private BigDecimal parsedAmount;
+    private final RoleBehavior roleBehavior;
+
 
     // ===== MODE =====
     private FormMode mode = FormMode.CREATE;
@@ -93,13 +89,9 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient) {
-        this.authService = authService;
-        this.blockchainService = blockchainService;
-        this.props = props;
+    public TransactionFormController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior) {
         this.sessionService = sessionService;
-        this.leaderClient = leaderClient;
-        this.replicaClient = replicaClient;
+        this.roleBehavior = roleBehavior;
     }
 
     @FXML
@@ -144,8 +136,10 @@ public class TransactionFormController {
 
     @FXML
     private void onCancel() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         actions.onCancel();
@@ -153,8 +147,10 @@ public class TransactionFormController {
 
     @FXML
     private void onSaveDraft() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         if (buildAndValidatePayload()) {
@@ -163,30 +159,13 @@ public class TransactionFormController {
                     txId,
                     Instant.now(),
                     typeCombo.getValue(),
-                    authService.getNameFromToken(App.get().getToken()),
+                    sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
                     targetField.getText(),
                     initiatorField.getText()
             );
-            if (mode == FormMode.EDIT) {
-                if (Objects.equals(props.role(), "LEADER")) {
-                    blockchainService.editDraft(tx);
-                    leaderClient.broadcastEditDraft(tx);
-                } else {
-                    replicaClient.editDraft(tx);
-                }
-
-            }
-            else {
-                if (Objects.equals(props.role(), "LEADER")) {
-                    blockchainService.addDraft(tx);
-                    leaderClient.broadcastAddDraft(tx);
-                } else {
-                    replicaClient.addDraft(tx);
-                }
-
-            }
+            roleBehavior.addDraft(tx,mode.toString());
             actions.onSaveDraft();
         }
 
@@ -194,8 +173,10 @@ public class TransactionFormController {
 
     @FXML
     private void onSubmit() {
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
+        }
 
         clearError();
         if (buildAndValidatePayload()) {
@@ -204,48 +185,15 @@ public class TransactionFormController {
                     txId,
                     Instant.now(),
                     typeCombo.getValue(),
-                    authService.getNameFromToken(App.get().getToken()),
+                    sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
                     targetField.getText(),
                     initiatorField.getText()
             );
-            if (mode == FormMode.EDIT) {
-                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
-                    blockchainService.editDraft(tx);
-                    leaderClient.broadcastEditDraft(tx);
-                }
-                else {
-                    replicaClient.editDraft(tx);
-                }
-                txId = existing.id();
-            }
-            else {
-                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
-                    txId = blockchainService.addDraft(tx);
-                    leaderClient.broadcastAddDraft(tx);
-                }
-                else {
-                    replicaClient.addDraft(tx); // TODO: add id post back if have time
-                }
-            }
 
-            boolean approveImmediately = false;
 
-            if (Objects.equals(props.role(), "LEADER")) {
-                if (authService.validateRole(App.get().getToken(), Role.LEADER)) {
-                    approveImmediately = true;
-                    blockchainService.submitTransaction(txId);
-                    blockchainService.approve(txId);
-                    leaderClient.broadcastSubmit(txId);
-                    leaderClient.broadcastApprove(txId);
-                }
-            } else {
-                replicaClient.submit(txId);
-            }
-
-            // create draft -> change status submit -> approve
-            // replica: draft -> change status submit
+            boolean approveImmediately = roleBehavior.onSubmitDraft(tx,mode.toString());
 
             actions.onSubmit(approveImmediately);
         }
@@ -332,12 +280,14 @@ public class TransactionFormController {
         // - EDIT: original creator (если есть)
         // - CREATE: current user
 
-        createdByLabel.setText(authService.getNameFromToken(App.get().getToken()));
+        createdByLabel.setText(sessionService.getName());
 
         // submit button text by role
-        if (!sessionService.ensureAuthenticated())
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
             return;
-        submitBtn.setText(authService.validateRole(App.get().getToken(), Role.LEADER) ? "Submit and approve" : "Submit");
+        }
+        submitBtn.setText(sessionService.validateRole(Role.LEADER) ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {

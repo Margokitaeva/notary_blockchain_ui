@@ -1,14 +1,14 @@
 package com.dp.notary.blockchain.ui;
 
 import com.dp.notary.blockchain.App;
-import com.dp.notary.blockchain.auth.AuthService;
+import com.dp.notary.blockchain.auth.SessionService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+
 @Component
 public class SignupController {
 
@@ -17,15 +17,15 @@ public class SignupController {
     @FXML private PasswordField confirmField;
     @FXML private Label errorLabel;
 
-    private final AuthService authService;
+    private final SessionService sessionService;
 
     SignupController(
-            final AuthService authService
+            final SessionService sessionService
     ){
-        this.authService = authService;
+        this.sessionService = sessionService;
     }
     @FXML
-    private void onCreateAccount() throws IOException {
+    private void onCreateAccount() {
         String u = usernameField.getText() == null ? "" : usernameField.getText().trim();
         String p1 = passwordField.getText() == null ? "" : passwordField.getText();
         String p2 = confirmField.getText() == null ? "" : confirmField.getText();
@@ -42,7 +42,7 @@ public class SignupController {
             return;
         }
 
-        boolean ok = authService.signUp(u, p1);
+        boolean ok = sessionService.signUp(u, p1);
         if(!ok){
             errorLabel.setText("Sign up failed.");
             errorLabel.setVisible(true);
@@ -52,7 +52,7 @@ public class SignupController {
     }
 
     @FXML
-    private void onBackToLogin() throws IOException {
+    private void onBackToLogin() {
         App.get().showLogin();
     }
 }
