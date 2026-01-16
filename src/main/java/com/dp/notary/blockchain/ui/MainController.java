@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import org.springframework.stereotype.Component;
 import com.dp.notary.blockchain.auth.Role;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.function.Consumer;
 
 import java.time.LocalDateTime;
@@ -306,7 +307,7 @@ public class MainController {
                             tx.timestamp(),
                             TransactionType.valueOf(tx.type().name()),
                             tx.createdBy(),
-                            tx.amount(),
+                            new BigDecimal(tx.amount()),
                             tx.target(),
                             tx.initiator()
                     );

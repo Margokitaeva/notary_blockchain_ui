@@ -44,18 +44,14 @@ public class LeaderClient {
         for (String replica : props.replicas()) {
             client.post()
                     .uri(replica + path)
-                    .body(body)
-                    .retrieve()
-                    .toBodilessEntity();
+                    .body(body);
         }
     }
 
     private void broadcastDelete(String path) {
         for (String replica : props.replicas()) {
             client.delete()
-                    .uri(replica + path)
-                    .retrieve()
-                    .toBodilessEntity();
+                    .uri(replica + path);
         }
     }
 
@@ -63,9 +59,7 @@ public class LeaderClient {
         for (String replica : props.replicas()) {
             client.put()
                     .uri(replica + path)
-                    .body(body)
-                    .retrieve()
-                    .toBodilessEntity();
+                    .body(body);
         }
     }
 }

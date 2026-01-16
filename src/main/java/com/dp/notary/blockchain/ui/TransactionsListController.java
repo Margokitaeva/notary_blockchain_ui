@@ -112,9 +112,8 @@ public class TransactionsListController {
         @Override public void onResubmit() { System.out.println("Resubmit: "); }
     };
 
-    private static final DateTimeFormatter TIME_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .withLocale(Locale.US)
+    DateTimeFormatter TIME_FMT =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
                     .withZone(ZoneId.systemDefault());
 
     // ================== MODULES ==================
@@ -272,7 +271,7 @@ public class TransactionsListController {
         detailsCreatedBy.setText(nullToDash(tx.createdBy()));
         detailsInitiator.setText(nullToDash(tx.initiator()));
         detailsTarget.setText(nullToDash(tx.target()));
-        detailsAmount.setText(String.valueOf(tx.amount()));
+        detailsAmount.setText(tx.amount());
     }
 
     // ================== MODE UI ==================
@@ -596,11 +595,11 @@ public class TransactionsListController {
         }
         public TransactionRowVM(TransactionEntity tx) {
             this.id.set(tx.getTxId());
-            this.timestampEpoch.set(0);
+            this.timestampEpoch.set(tx.getTimestamp().getEpochSecond());
             this.status = tx.getStatus();
             this.type = tx.getType();
             this.createdBy.set(tx.getCreatedBy());
-            this.target.set(tx.getTarget());//TODO: расшифровать payload
+            this.target.set(tx.getTarget());
             this.amount.set(tx.getAmount().toString());
             this.initiator.set(tx.getInitiator());
         }
@@ -612,7 +611,7 @@ public class TransactionsListController {
         public String createdBy() { return createdBy.get(); }
         public String initiator() { return initiator.get(); }
         public String target() { return target.get(); }
-        public BigDecimal amount() { return new BigDecimal(amount.get()); }
+        public String amount() { return amount.get(); }
 
     }
 }

@@ -58,10 +58,9 @@ public class TransactionFormController {
     @FXML
     private Button submitBtn;
     private final AuthService authService;
-    private NotaryProperties props;
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
-
+    private final NotaryProperties props;
     private BigDecimal parsedAmount;
 
     // ===== MODE =====
@@ -170,7 +169,6 @@ public class TransactionFormController {
                     targetField.getText(),
                     initiatorField.getText()
             );
-
             if (mode == FormMode.EDIT) {
                 if (Objects.equals(props.role(), "LEADER")) {
                     blockchainService.editDraft(tx);
@@ -181,7 +179,7 @@ public class TransactionFormController {
 
             }
             else {
-                if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+                if (Objects.equals(props.role(), "LEADER")) {
                     blockchainService.addDraft(tx);
                     leaderClient.broadcastAddDraft(tx);
                 } else {
