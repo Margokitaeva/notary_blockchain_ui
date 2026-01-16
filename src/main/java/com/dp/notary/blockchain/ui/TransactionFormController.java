@@ -193,7 +193,7 @@ public class TransactionFormController {
             );
 
 
-            boolean approveImmediately = roleBehavior.onSubmitDraft(tx,mode.toString());
+            boolean approveImmediately = roleBehavior.onSubmitDraft(tx,mode.toString(), sessionService.validateRole(Role.LEADER));
 
             actions.onSubmit(approveImmediately);
         }
