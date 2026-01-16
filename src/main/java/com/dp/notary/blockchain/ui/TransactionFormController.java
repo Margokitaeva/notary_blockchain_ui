@@ -10,6 +10,7 @@ import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import com.dp.notary.blockchain.config.NotaryProperties;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -58,7 +59,7 @@ public class TransactionFormController {
     private final AuthService authService;
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
-
+private final NotaryProperties props;
     private BigDecimal parsedAmount;
 
     // ===== MODE =====
@@ -91,12 +92,13 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(AuthService authService, BlockchainService blockchainService, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient) {
+    public TransactionFormController(AuthService authService, BlockchainService blockchainService, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, NotaryProperties props) {
         this.authService = authService;
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
         this.leaderClient = leaderClient;
         this.replicaClient = replicaClient;
+        this.props = props;
     }
 
     @FXML
@@ -160,8 +162,7 @@ public class TransactionFormController {
                     targetField.getText(),
                     initiatorField.getText()
             );
-
-            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+            if (Objects.equals(props.role(), "LEADER")) {
                 blockchainService.addDraft(tx);
                 leaderClient.broadcastAddDraft(tx);
             } else {
@@ -191,7 +192,7 @@ public class TransactionFormController {
 
             boolean approveImmediately = false;
 
-            if (Objects.equals(App.get().getAppRole(), "LEADER")) {
+            if (Objects.equals(props.role(), "LEADER")) {
                 if (!sessionService.ensureAuthenticated())
                     return;
                 if (authService.validateRole(App.get().getToken(), Role.LEADER)) {

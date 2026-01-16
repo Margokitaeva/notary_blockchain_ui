@@ -29,9 +29,6 @@ public class App extends Application {
     @Getter
     @Setter
     private String token = "";
-    @Getter
-    @Value("${notary.role}")
-    private String AppRole;
     @Override
     public void init() {
         instance = this;
