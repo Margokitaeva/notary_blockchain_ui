@@ -1,5 +1,14 @@
 package com.dp.notary.blockchain.ui;
 
+import com.dp.notary.blockchain.App;
+import com.dp.notary.blockchain.api.client.LeaderClient;
+import com.dp.notary.blockchain.api.client.ReplicaClient;
+import com.dp.notary.blockchain.auth.Role;
+import com.dp.notary.blockchain.auth.SessionService;
+import com.dp.notary.blockchain.behavior.RoleBehavior;
+import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.config.NotaryProperties;
+import com.dp.notary.blockchain.owner.OwnerService;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.*;
@@ -8,6 +17,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+
+import static org.apache.logging.log4j.util.Strings.trimToNull;
 
 @Component
 public class DashboardController {
@@ -21,19 +34,30 @@ public class DashboardController {
     @FXML private TextField ownerFilterField;
     @FXML private TableView<OwnerSharesVM> sharesTable;
     @FXML private TableColumn<OwnerSharesVM, String> ownerCol;
-    @FXML private TableColumn<OwnerSharesVM, Number> sharesCol;
+    @FXML private TableColumn<OwnerSharesVM, String> sharesCol;
 
-    @FXML private Label totalSharesLabel;
+    private String ownerFilter;
+
     @FXML private VBox statsBox;
 
     /* =======================
        Data
        ======================= */
 
-    private final ObservableList<OwnerSharesVM> masterData =
-            FXCollections.observableArrayList();
+    private final ObservableList<OwnerSharesVM> masterData = FXCollections.observableArrayList();
 
-    private FilteredList<OwnerSharesVM> filteredData;
+    private BlockchainService blockchainService;
+    private final SessionService sessionService;
+    private OwnerService ownerService;
+
+//    private FilteredList<OwnerSharesVM> filteredData;
+
+
+    DashboardController(BlockchainService blockchainService, SessionService sessionService, OwnerService ownerService){
+        this.blockchainService = blockchainService;
+        this.sessionService = sessionService;
+        this.ownerService = ownerService;
+    }
 
     /* =======================
        Init
@@ -42,12 +66,43 @@ public class DashboardController {
     @FXML
     public void initialize() {
         setupTable();
-        setupFiltering();
+        setDataAndButtons();
+    }
 
-//        statsBox.setAlignment(javafx.geometry.Pos.TOP_CENTER);
-//
-//        // 👉 отступ сверху, чтобы начать на уровне таблицы
-//        statsBox.setPadding(new javafx.geometry.Insets(90, 0, 0, 0));
+    public void setDataAndButtons() {
+        setCompany(new DashboardController.CompanyVM("H&P.Co"));
+
+        getSharesData();
+
+        if (sessionService.validateRole(Role.LEADER)) {
+            configureForLeader(
+                    new LeaderStatsVM(
+                            blockchainService.totalApproved(null, null, null, null),
+                            blockchainService.totalSubmitted(null, null, null, null),
+                            blockchainService.totalDraft(sessionService.getName(), null, null, null)
+                    )
+            );
+        } else {
+            String username = sessionService.getName();
+            configureForReplica(
+                    new ReplicaStatsVM(
+                            blockchainService.totalApproved(username, null, null, null),
+                            blockchainService.totalSubmitted(username, null, null, null),
+                            blockchainService.totalDraft(username, null, null, null),
+                            blockchainService.totalDeclined(username, null, null, null)
+                    )
+            );
+        }
+    }
+
+    private void getSharesData() {
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
+            return;
+        }
+
+        setSharesData(ownerService.getOwnersShares(ownerFilter).stream()
+                .map(o -> new DashboardController.OwnerSharesVM(o.getName_surname(), o.getShares())).toList());
     }
 
     private void setupTable() {
@@ -55,24 +110,36 @@ public class DashboardController {
                 new SimpleStringProperty(c.getValue().owner()));
 
         sharesCol.setCellValueFactory(c ->
-                new SimpleIntegerProperty(c.getValue().shares()));
+                new SimpleStringProperty(String.valueOf(c.getValue().shares())));
 
-        // built-in sorting
         ownerCol.setSortable(true);
         sharesCol.setSortable(true);
 
-        filteredData = new FilteredList<>(masterData, p -> true);
-        sharesTable.setItems(filteredData);
+        sharesTable.setItems(masterData);
     }
 
-    private void setupFiltering() {
-        ownerFilterField.textProperty().addListener((obs, oldV, newV) -> {
-            String filter = newV == null ? "" : newV.toLowerCase();
+    @FXML
+    private void onClearFilters() {
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
+            return;
+        }
 
-            filteredData.setPredicate(vm ->
-                    vm.owner().toLowerCase().contains(filter)
-            );
-        });
+        ownerFilterField.clear();
+
+        onApplyFilters();
+    }
+
+    @FXML
+    private void onApplyFilters() {
+        if (!sessionService.isAuthenticated()){
+            App.get().showLogin();
+            return;
+        }
+
+        ownerFilter = trimToNull(ownerFilterField.getText());
+
+        getSharesData();
     }
 
     /* =======================
@@ -80,17 +147,11 @@ public class DashboardController {
        ======================= */
 
     public void setCompany(CompanyVM company) {
-        // TODO взять название компании из Company (domain / dto)
         companyNameLabel.setText(company.name());
     }
 
-    public void setSharesData(
-            java.util.List<OwnerSharesVM> rows,
-            int totalShares
-    ) {
-        // TODO данные из backend / ledger state
+    public void setSharesData(java.util.List<OwnerSharesVM> rows) {
         masterData.setAll(rows);
-        totalSharesLabel.setText("Total shares: " + totalShares);
     }
 
     public void configureForLeader(LeaderStatsVM stats) {
@@ -136,7 +197,7 @@ public class DashboardController {
        View models
        ======================= */
 
-    public record OwnerSharesVM(String owner, int shares) {}
+    public record OwnerSharesVM(String owner, BigDecimal shares) {}
 
     public record CompanyVM(String name) {}
 

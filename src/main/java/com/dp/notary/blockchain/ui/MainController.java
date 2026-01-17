@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import com.dp.notary.blockchain.owner.OwnerService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 public class MainController {
 
 
+    private final OwnerService ownerService;
     // ===== HEADER =====
     @FXML private Label pageTitle;
     @FXML private Label userNameLabel;
@@ -39,9 +41,10 @@ public class MainController {
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
 
-    public MainController(BlockchainService blockchainService, SessionService sessionService) {
+    public MainController(BlockchainService blockchainService, SessionService sessionService, OwnerService ownerService) {
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
+        this.ownerService = ownerService;
     }
 
     // ===== INIT =====
@@ -297,39 +300,14 @@ public class MainController {
         // TODO: uncomment everything below when connect to existing functions
         loadIntoContent("/fxml/DashboardView.fxml", controller -> {
             DashboardController c = (DashboardController) controller;
-
-            c.setCompany(new DashboardController.CompanyVM("H&P.Co"));
-
 //            // TODO ledger state -> shares per owner
 //            c.setSharesData(
-//                    /* List<OwnerSharesVM> */,
+//                    ownerService.getOwnersShares().stream().map(o -> new DashboardController.OwnerSharesVM(o.getName_surname(), o.getShares())).toList(),
+//                    ownerService.getTotalShares()
 //                    /* totalShares */
 //            );
             // вынести первый иф в отдельную функцию
 
-            if (!sessionService.isAuthenticated()){
-                App.get().showLogin();
-                return;
-            }
-            if (sessionService.validateRole(Role.LEADER)) {
-                c.configureForLeader(
-                        new DashboardController.LeaderStatsVM(
-                                blockchainService.totalApproved(null, null, null, null),
-                                blockchainService.totalSubmitted(null, null, null, null),
-                                blockchainService.totalDraft(sessionService.getName(), null, null, null)
-                        )
-                );
-            } else {
-                String username = sessionService.getName();
-                c.configureForReplica(
-                        new DashboardController.ReplicaStatsVM(
-                                blockchainService.totalApproved(username, null, null, null),
-                                blockchainService.totalSubmitted(username, null, null, null),
-                                blockchainService.totalDraft(username, null, null, null),
-                                blockchainService.totalDeclined(username, null, null, null)
-                        )
-                );
-            }
         });
     }
 

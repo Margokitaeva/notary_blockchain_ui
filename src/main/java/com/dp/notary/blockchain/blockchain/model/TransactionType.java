@@ -1,10 +1,9 @@
 package com.dp.notary.blockchain.blockchain.model;
 
 public enum TransactionType {
-    PURCHASE,
     GRANT,
-    DIVIDEND,
-    SELL;
+    SELL,
+    TRANSFER;
 
     public static TransactionType fromString(String value) {
         for (TransactionType type : values()) {

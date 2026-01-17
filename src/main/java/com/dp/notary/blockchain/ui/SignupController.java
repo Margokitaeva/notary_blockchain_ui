@@ -44,7 +44,7 @@ public class SignupController {
 
         boolean ok = sessionService.signUp(u, p1);
         if(!ok){
-            errorLabel.setText("Sign up failed.");
+            errorLabel.setText("Sign up failed. Try another usename");
             errorLabel.setVisible(true);
         }else {
             App.get().showLogin();

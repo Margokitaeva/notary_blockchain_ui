@@ -188,10 +188,9 @@ public class TransactionsListController {
         // Type filter: ALL + enum values
         filterType.setItems(FXCollections.observableArrayList(
                 TypeFilterItem.all(),
-                TypeFilterItem.of(TransactionType.PURCHASE),
+                TypeFilterItem.of(TransactionType.TRANSFER),
                 TypeFilterItem.of(TransactionType.SELL),
-                TypeFilterItem.of(TransactionType.GRANT),
-                TypeFilterItem.of(TransactionType.DIVIDEND)
+                TypeFilterItem.of(TransactionType.GRANT)
         ));
         filterType.getSelectionModel().selectFirst();
     }

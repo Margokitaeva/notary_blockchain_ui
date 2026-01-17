@@ -17,11 +17,6 @@
     -fx-font-weight: bold;
 }
 
-.stat-label {
-    -fx-opacity: 0.7;
-    -fx-text-alignment: center;
-}
-
 .stats-box {
     -fx-padding: 90 0 0 0;   /* top right bottom left */
     -fx-alignment: top-center;

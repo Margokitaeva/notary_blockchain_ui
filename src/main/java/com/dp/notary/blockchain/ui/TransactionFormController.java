@@ -11,6 +11,7 @@ import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import com.dp.notary.blockchain.config.NotaryProperties;
+import com.dp.notary.blockchain.owner.OwnerService;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -66,9 +68,12 @@ public class TransactionFormController {
     private Button draftBtn;
     @FXML
     private Button submitBtn;
-    private final SessionService sessionService;
+
     private BigDecimal parsedAmount;
+
+    private final SessionService sessionService;
     private final RoleBehavior roleBehavior;
+    private OwnerService ownerService;
 
 
     // ===== MODE =====
@@ -101,9 +106,10 @@ public class TransactionFormController {
         }
     };
 
-    public TransactionFormController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior) {
+    public TransactionFormController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior, OwnerService ownerService) {
         this.sessionService = sessionService;
         this.roleBehavior = roleBehavior;
+        this.ownerService = ownerService;
     }
 
     @FXML
@@ -112,6 +118,7 @@ public class TransactionFormController {
         setupAmountField();
         clearError();
         applyModeUI();
+        loadOwners();
         initiatorCombo.setEditable(true);
         targetCombo.setEditable(true);
     }
@@ -121,6 +128,7 @@ public class TransactionFormController {
     public void setMode(FormMode mode) {
         this.mode = Objects.requireNonNull(mode);
         applyModeUI();
+        loadOwners();
         // TODO получение ownerов тут наверное ???
     }
 
@@ -149,6 +157,16 @@ public class TransactionFormController {
         amountField.setText(String.valueOf(tx.amount()));
 
         applyModeUI();
+    }
+
+    public void loadOwners() {
+        if (!sessionService.isAuthenticated()) {
+            return;
+        }
+
+        List<String> owners = ownerService.getOwnersNames();
+        initiatorCombo.getItems().setAll(owners);
+        targetCombo.getItems().setAll(owners);
     }
 
     private String getInitiatorValue() {
@@ -323,10 +341,9 @@ public class TransactionFormController {
 
     private void setupTypeCombo() {
         typeCombo.getItems().setAll(
-                TransactionType.PURCHASE,
+                TransactionType.TRANSFER,
                 TransactionType.SELL,
-                TransactionType.GRANT,
-                TransactionType.DIVIDEND
+                TransactionType.GRANT
         );
 
         typeCombo.setConverter(new StringConverter<>() {

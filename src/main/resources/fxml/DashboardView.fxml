@@ -30,12 +30,25 @@
             <VBox spacing="12" HBox.hgrow="ALWAYS">
 
                 <!-- Filter -->
-                <VBox spacing="4">
-                    <Label text="Filter by owner"/>
-                    <TextField fx:id="ownerFilterField"
-                               promptText="Owner name"
-                               maxWidth="260"/>
-                </VBox>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <VBox spacing="4">
+                        <Label text="Filter by owner"/>
+                        <TextField fx:id="ownerFilterField"
+                                   promptText="Owner name"
+                                   maxWidth="260"/>
+                    </VBox>
+                    <VBox spacing="2">
+                        <Label styleClass="tx-filter-label" text=" " />
+
+                        <Button onAction="#onClearFilters" prefHeight="25.0" prefWidth="72.0" styleClass="tx-clear-btn" text="Clear" />
+                    </VBox>
+                    <VBox spacing="2">
+                        <Label styleClass="tx-filter-label" text=" " />
+
+                        <Button onAction="#onApplyFilters" prefHeight="25.0" prefWidth="72.0" styleClass="tx-clear-btn" text="Apply" />
+                    </VBox>
+                </HBox>
+
 
             <!-- Table -->
             <TableView fx:id="sharesTable"
@@ -43,12 +56,10 @@
 
                     <columns>
                         <TableColumn fx:id="ownerCol" text="Owner"/>
-                        <TableColumn fx:id="sharesCol" text="Shares"/>
+                        <TableColumn fx:id="sharesCol" text="Shares" prefWidth="150"/>
                     </columns>
                 </TableView>
 
-                <!-- Footer -->
-                <Label fx:id="totalSharesLabel" text="Total shares: 0" styleClass="total-label"/>
             </VBox>
 
             <!-- RIGHT: stats (fixed comfortable width) -->

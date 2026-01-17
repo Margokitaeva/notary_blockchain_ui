@@ -149,18 +149,18 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                            target,
                            initiator
                    FROM transactions WHERE status = ?
-                       AND (? IS NULL OR created_by = ?)
-                       AND (? IS NULL OR initiator = ?)
-                       AND (? IS NULL OR target = ?)
+                       AND (? IS NULL OR created_by LIKE ?)
+                       AND (? IS NULL OR initiator LIKE ?)
+                       AND (? IS NULL OR target LIKE ?)
                        AND (? IS NULL OR type = ?)
                    ORDER BY timestamp DESC
                    LIMIT ? OFFSET ?
                """,
                 this::mapRow,
                 status.name(),
-                createdByFilter, createdByFilter,
-                initiatorFilter, initiatorFilter,
-                targetFilter, targetFilter,
+                createdByFilter, "%" + createdByFilter + "%",
+                initiatorFilter, "%" + initiatorFilter + "%",
+                targetFilter, "%" + targetFilter + "%",
                 typeFilterString, typeFilterString,
                 limit, offset
         );
@@ -202,9 +202,9 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
                                initiator
                         FROM transactions
                         WHERE status IN (%s)
-                          AND (? IS NULL OR created_by = ?)
-                          AND (? IS NULL OR initiator = ?)
-                          AND (? IS NULL OR target = ?)
+                          AND (? IS NULL OR created_by LIKE ?)
+                          AND (? IS NULL OR initiator LIKE ?)
+                          AND (? IS NULL OR target LIKE ?)
                           AND (? IS NULL OR type = ?)
                         ORDER BY timestamp DESC
                         LIMIT ? OFFSET ?
@@ -216,9 +216,9 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
         statuses.forEach(s -> params.add(s.name()));
 
         // фильтры
-        params.add(createdByFilter); params.add(createdByFilter);
-        params.add(initiatorFilter); params.add(initiatorFilter);
-        params.add(targetFilter);    params.add(targetFilter);
+        params.add(createdByFilter); params.add("%" + createdByFilter + "%");
+        params.add(initiatorFilter); params.add("%" + initiatorFilter + "%");
+        params.add(targetFilter);    params.add("%" + targetFilter + "%");
         params.add(typeFilterString);params.add(typeFilterString);
 
         params.add(limit);
@@ -256,16 +256,16 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
         Integer cnt = jdbc.queryForObject(
             """
                     SELECT COUNT(1) FROM transactions WHERE status=?
-                        AND (? IS NULL OR created_by = ?)
-                        AND (? IS NULL OR initiator = ?)
-                        AND (? IS NULL OR target = ?)
+                        AND (? IS NULL OR created_by LIKE ?)
+                        AND (? IS NULL OR initiator LIKE ?)
+                        AND (? IS NULL OR target LIKE ?)
                         AND (? IS NULL OR type = ?)
                 """,
                 Integer.class,
                 status.name(),
-                createdByFilter, createdByFilter,
-                initiatorFilter, initiatorFilter,
-                targetFilter, targetFilter,
+                createdByFilter, "%" + createdByFilter + "%",
+                initiatorFilter, "%" + initiatorFilter + "%",
+                targetFilter, "%" + targetFilter + "%",
                 typeFilterString, typeFilterString
         );
         return cnt == null ? 0 : cnt;

@@ -15,12 +15,13 @@ CREATE TABLE IF NOT EXISTS users
 );
 CREATE TABLE IF NOT EXISTS owners
 (
-    name_surname TEXT NOT NULL UNIQUE PRIMARY KEY
+    name_surname TEXT NOT NULL UNIQUE PRIMARY KEY,
+    shares TEXT NOT NULL
 );
-INSERT OR IGNORE INTO owners(name_surname)
-VALUES ('Chuila Chujevich');
-INSERT OR IGNORE INTO owners(name_surname)
-VALUES ('Pizdziuk Pizdzievich');
+INSERT OR IGNORE INTO owners(name_surname, shares)
+VALUES ('Chuila Chujevich', 1000);
+INSERT OR IGNORE INTO owners(name_surname, shares)
+VALUES ('Pizdziuk Pizdzievich', 1000);
 
 CREATE TABLE IF NOT EXISTS transactions
 (
