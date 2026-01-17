@@ -45,15 +45,67 @@
 
         <!-- Initiator -->
         <Label text="Initiator" styleClass="txform-label" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-        <TextField fx:id="initiatorField" promptText="Owner name / id"
-                   styleClass="txform-input"
-                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        <HBox spacing="6"
+              GridPane.rowIndex="1" GridPane.columnIndex="1">
+
+            <!-- TEXT FIELD -->
+            <TextField fx:id="initiatorTextField"
+                       promptText="Owner name"
+                       styleClass="txform-input"
+                       HBox.hgrow="ALWAYS"
+                       maxWidth="Infinity"/>
+
+            <!-- COMBO (hidden by default) -->
+            <ComboBox fx:id="initiatorCombo"
+                      editable="true"
+                      visible="false"
+                      managed="false"
+                      styleClass="txform-input"
+                      HBox.hgrow="ALWAYS"
+                      maxWidth="Infinity"/>
+
+            <!-- SWITCH BUTTON -->
+            <Button fx:id="initiatorModeBtn"
+                    text="Dropdown"
+                    onAction="#onToggleInitiatorMode"
+                    styleClass="txform-btn"
+                    minWidth="110"
+                    prefWidth="110"
+                    maxWidth="110"/>
+        </HBox>
 
         <!-- Target -->
         <Label text="Target" styleClass="txform-label" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-        <TextField fx:id="targetField" promptText="Owner name / id"
-                   styleClass="txform-input"
-                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <HBox spacing="6"
+              GridPane.rowIndex="2" GridPane.columnIndex="1">
+
+            <!-- TEXT FIELD -->
+            <TextField fx:id="targetTextField" promptText="Owner name"
+                       styleClass="txform-input"
+                       GridPane.rowIndex="2"
+                       GridPane.columnIndex="1"
+                       HBox.hgrow="ALWAYS"
+                       maxWidth="Infinity"/>
+
+            <!-- COMBO (hidden by default) -->
+            <ComboBox fx:id="targetCombo"
+                      editable="true"
+                      visible="false"
+                      managed="false"
+                      styleClass="txform-input"
+                      HBox.hgrow="ALWAYS"
+                      maxWidth="Infinity"/>
+
+            <!-- SWITCH BUTTON -->
+            <Button fx:id="targetModeBtn"
+                    text="Dropdown"
+                    onAction="#onToggleTargetMode"
+                    styleClass="txform-btn"
+                    minWidth="110"
+                    prefWidth="110"
+                    maxWidth="110"/>
+        </HBox>
+
 
         <!-- Amount -->
         <Label text="Amount" styleClass="txform-label" GridPane.rowIndex="3" GridPane.columnIndex="0"/>

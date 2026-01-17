@@ -39,11 +39,23 @@ public class TransactionFormController {
     @FXML
     private ComboBox<TransactionType> typeCombo;
     @FXML
-    private TextField initiatorField;
+    private TextField initiatorTextField;
     @FXML
-    private TextField targetField;
+    private TextField targetTextField;
     @FXML
     private TextField amountField;
+
+    @FXML
+    private ComboBox<String> initiatorCombo;
+    @FXML
+    private Button initiatorModeBtn;
+    private boolean initiatorDropdownMode = false;
+
+    @FXML
+    private ComboBox<String> targetCombo;
+    @FXML
+    private Button targetModeBtn;
+    private boolean targetDropdownMode = false;
 
     @FXML
     private Label errorLabel;
@@ -101,6 +113,8 @@ public class TransactionFormController {
         setupAmountField();
         clearError();
         applyModeUI();
+        initiatorCombo.setEditable(true);
+        targetCombo.setEditable(true);
     }
 
     // ================= PUBLIC API =================
@@ -111,6 +125,7 @@ public class TransactionFormController {
             existing = null;
         }
         applyModeUI();
+        // TODO получение ownerов тут наверное ???
     }
 
     public void setActions(Actions actions) {
@@ -129,11 +144,27 @@ public class TransactionFormController {
 
         // Заполняем редактируемые поля:
         typeCombo.setValue(tx.type());
-        initiatorField.setText(n2e(tx.initiator()));
-        targetField.setText(n2e(tx.target()));
+        initiatorTextField.setText(n2e(tx.initiator()));
+        initiatorCombo.setValue(n2e(tx.initiator()));
+
+        targetTextField.setText(n2e(tx.target()));
+        targetCombo.setValue(n2e(tx.target()));
+
         amountField.setText(String.valueOf(tx.amount()));
 
         applyModeUI();
+    }
+
+    private String getInitiatorValue() {
+        return initiatorDropdownMode
+                ? initiatorCombo.getEditor().getText()
+                : initiatorTextField.getText();
+    }
+
+    private String getTargetValue() {
+        return targetDropdownMode
+                ? targetCombo.getEditor().getText()
+                : targetTextField.getText();
     }
 
     // ================= ACTIONS =================
@@ -166,8 +197,8 @@ public class TransactionFormController {
                     sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
-                    targetField.getText(),
-                    initiatorField.getText()
+                    getTargetValue(),
+                    getInitiatorValue()
             );
             roleBehavior.addDraft(tx,mode.toString());
             actions.onSaveDraft();
@@ -192,8 +223,8 @@ public class TransactionFormController {
                     sessionService.getName(),
                     TransactionStatus.DRAFT,
                     parsedAmount,
-                    targetField.getText(),
-                    initiatorField.getText()
+                    getTargetValue(),
+                    getInitiatorValue()
             );
 
 
@@ -217,8 +248,8 @@ public class TransactionFormController {
      */
     private boolean buildAndValidatePayload() {
         TransactionType type = typeCombo.getValue();
-        String initiator = trimToNull(initiatorField.getText());
-        String target = trimToNull(targetField.getText());
+        String initiator = trimToNull(getInitiatorValue());
+        String target = trimToNull(getTargetValue());
         String amountRaw = trimToNull(amountField.getText());
 
         if (type == null) {
@@ -329,6 +360,67 @@ public class TransactionFormController {
             }
         });
     }
+
+    @FXML
+    private void onToggleInitiatorMode() {
+        initiatorDropdownMode = !initiatorDropdownMode;
+
+        if (initiatorDropdownMode) {
+            // TEXT → DROPDOWN
+            initiatorCombo.setValue(initiatorTextField.getText());
+
+            initiatorCombo.setVisible(true);
+            initiatorCombo.setManaged(true);
+
+            initiatorTextField.setVisible(false);
+            initiatorTextField.setManaged(false);
+
+            initiatorModeBtn.setText("Text field");
+        } else {
+            // DROPDOWN → TEXT
+            initiatorTextField.setText(initiatorCombo.getEditor().getText());
+
+            initiatorTextField.setVisible(true);
+            initiatorTextField.setManaged(true);
+
+            initiatorCombo.setVisible(false);
+            initiatorCombo.setManaged(false);
+
+            initiatorModeBtn.setText("Dropdown");
+        }
+    }
+
+    @FXML
+    private void onToggleTargetMode() {
+        targetDropdownMode = !targetDropdownMode;
+
+        if (targetDropdownMode) {
+            // TEXT → DROPDOWN
+            targetCombo.setValue(targetTextField.getText());
+
+            targetCombo.setVisible(true);
+            targetCombo.setManaged(true);
+
+            targetTextField.setVisible(false);
+            targetTextField.setManaged(false);
+
+            targetModeBtn.setText("Text field");
+        } else {
+            // DROPDOWN → TEXT
+            targetTextField.setText(targetCombo.getEditor().getText());
+
+            targetTextField.setVisible(true);
+            targetTextField.setManaged(true);
+
+            targetCombo.setVisible(false);
+            targetCombo.setManaged(false);
+
+            targetModeBtn.setText("Dropdown");
+        }
+    }
+
+
+
 
     // ================= TYPES =================
 

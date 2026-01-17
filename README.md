@@ -5,9 +5,11 @@ TO DO:
 - [ ] сделать пост для возврата id когда реплика создает черновик (onSaveDraft, onSubmit in TransactionFormController)
 
 UI:
+- [x] сделать выпадающий список с поиском для initiator and target
 - [ ] подключить получение owners and their shares in Dashboard
 - [x] удалить фильтр created by для соответствующих вкладок
 - [x] сделать чтобы автоматически открывался dashboard а не надпись Content will be here
+- [ ] сделать уведомление о том, что такой логин уже используется
 
 
 Done:
