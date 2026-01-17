@@ -8,5 +8,5 @@ public interface RoleBehavior {
     void declineTransaction(String txId); // onDecline
     void resubmit(String txId); //onResubmit
     void addDraft(TransactionEntity tx, String mode); // onSaveDraft
-    boolean onSubmitDraft(TransactionEntity tx,String mode); // onSubmit
+    boolean onSubmitDraft(TransactionEntity tx, String mode, boolean isLeader);
 }

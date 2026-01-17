@@ -22,11 +22,8 @@ private final LeaderClient leaderClient;
         this.props = props;
         this.leaderClient = leaderClient;
     }
-    // сервис, который знает: лидер мы или реплика
 
-    /**
-     * Добавить черновик
-     */
+
     @PostMapping("/both/addDraft")
     public ResponseEntity<String> addDraft(@RequestBody TransactionEntity tx) {
         String txId = blockchainService.addDraft(tx);

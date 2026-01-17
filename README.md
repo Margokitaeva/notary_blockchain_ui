@@ -1,7 +1,6 @@
 # notary_blockchain_ui
 
 TO DO:
-
 - [ ] сделать проверки успешности операций
 - [ ] сделать пост для возврата id когда реплика создает черновик (onSaveDraft, onSubmit in TransactionFormController)
 

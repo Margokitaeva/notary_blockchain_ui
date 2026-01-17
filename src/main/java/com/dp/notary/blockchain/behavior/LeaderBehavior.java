@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
-@ConditionalOnProperty(name = "notary.role", havingValue = "REPLICA")
+@ConditionalOnProperty(name = "notary.role", havingValue = "LEADER")
 public class LeaderBehavior implements RoleBehavior {
 
 
@@ -57,7 +57,7 @@ public class LeaderBehavior implements RoleBehavior {
     }
 
     @Override
-    public boolean onSubmitDraft(TransactionEntity tx, String mode) {
+    public boolean onSubmitDraft(TransactionEntity tx, String mode, boolean isLeader) {
         if (Objects.equals(mode, "EDIT")) {
             blockchainService.editDraft(tx);
             leaderClient.broadcastEditDraft(tx);
@@ -66,9 +66,11 @@ public class LeaderBehavior implements RoleBehavior {
             leaderClient.broadcastAddDraft(tx);
         }
         blockchainService.submitTransaction(tx.getTxId());
-        blockchainService.approve(tx.getTxId());
         leaderClient.broadcastSubmit(tx.getTxId());
-        leaderClient.broadcastApprove(tx.getTxId());
+        if (isLeader) {
+            blockchainService.approve(tx.getTxId());
+            leaderClient.broadcastApprove(tx.getTxId());
+        }
         return true;
     }
 }
