@@ -5,6 +5,7 @@ import com.dp.notary.blockchain.blockchain.persistence.BlockRepository;
 import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -95,35 +96,17 @@ public class BlockchainService {
         txRepo.updateStatus(txId, to);
     }
 
-    public int totalDraft(String createdByFilter,
-                          String initiatorFilter,
-                          String targetFilter,
-                          TransactionType typeFilter) {
-        return txRepo.countByStatus(TransactionStatus.DRAFT, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+    public int totalTransactions(TransactionStatus status,
+                                 String createdByFilter,
+                                 String initiatorFilter,
+                                 String targetFilter,
+                                 TransactionType typeFilter){
+        int number = txRepo.countByStatus(status, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+        if(status.equals(TransactionStatus.APPROVED)){
+            number += txRepo.countByStatus(TransactionStatus.SEALED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+        }
+        return number;
     }
-
-    public int totalDeclined(String createdByFilter,
-                             String initiatorFilter,
-                             String targetFilter,
-                             TransactionType typeFilter) {
-        return txRepo.countByStatus(TransactionStatus.DECLINED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
-    }
-
-    public int totalApproved(String createdByFilter,
-                             String initiatorFilter,
-                             String targetFilter,
-                             TransactionType typeFilter) {
-        return txRepo.countByStatus(TransactionStatus.APPROVED, createdByFilter, initiatorFilter, targetFilter, typeFilter)
-                + txRepo.countByStatus(TransactionStatus.SEALED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
-    }
-
-    public int totalSubmitted(String createdByFilter,
-                              String initiatorFilter,
-                              String targetFilter,
-                              TransactionType typeFilter) {
-        return txRepo.countByStatus(TransactionStatus.SUBMITTED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
-    }
-
     public List<TransactionEntity> getStatusTransactions(
             int from,
             int limit,
@@ -133,34 +116,26 @@ public class BlockchainService {
             String targetFilter,
             TransactionType typeFilter
     ) {
-        return txRepo.findByStatus(status,
+        List<TransactionEntity> transactions = txRepo.findByStatus(status,
                 createdByFilter,
                 initiatorFilter,
                 targetFilter,
                 typeFilter,
                 from * limit,
                 limit);
-    }
+        if (status.equals(TransactionStatus.APPROVED)) {
+            transactions.addAll(
+                    txRepo.findByStatus(TransactionStatus.SEALED,
+                            createdByFilter,
+                            initiatorFilter,
+                            targetFilter,
+                            typeFilter,
+                            from * limit,
+                            limit)
+            );
+        }
+        return transactions;
 
-    public List<TransactionEntity> getApprovedTransactions(
-            int from,
-            int limit,
-            String createdByFilter,
-            String initiatorFilter,
-            String targetFilter,
-            TransactionType typeFilter
-    ) {
-        List<TransactionStatus> statuses = List.of(TransactionStatus.APPROVED, TransactionStatus.SEALED);
-
-        return txRepo.findByStatuses(
-                statuses,
-                createdByFilter,
-                initiatorFilter,
-                targetFilter,
-                typeFilter,
-                from * limit,
-                limit
-        );
     }
 
     public BlockEntity createNextBlock() {
@@ -186,19 +161,6 @@ public class BlockchainService {
         txsForBlock.forEach(tx -> seal(tx.getTxId()));
         return next;
     }
-
-
-    public boolean validateBlocks() {
-        List<BlockEntity> blocks = blockRepo.findFromHeight(0, Integer.MAX_VALUE);
-
-        for (int i = 1; i < blocks.size(); i++) {
-            if (!blockProcessor.validateBlock(blocks.get(i - 1), blocks.get(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
 
     public void addBlock(BlockEntity block) {
         System.out.println(block.getHeight());
