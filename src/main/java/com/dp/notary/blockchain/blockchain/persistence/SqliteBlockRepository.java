@@ -32,7 +32,7 @@ public class SqliteBlockRepository implements BlockRepository {
                 (rs, i) -> mapEntity(
                         rs.getLong("height"),
                         rs.getString("prev_hash"),
-                        rs.getString("ts"),
+                        rs.getString("time_stamp"),
                         rs.getString("tx_json")
                 )
         );
@@ -55,7 +55,7 @@ public class SqliteBlockRepository implements BlockRepository {
                 (rs, i) -> mapEntity(
                         rs.getLong("height"),
                         rs.getString("prev_hash"),
-                        rs.getString("ts"),
+                        rs.getString("time_stamp"),
                         rs.getString("tx_json")
                 ),
                 fromHeight, limit

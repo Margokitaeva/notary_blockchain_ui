@@ -33,7 +33,7 @@ public class AuthService {
      */
     public String login(String name, String passwordHash) {
         Optional<User> userOpt = userRepository.findByNameAndHash(name, passwordHash);
-        if (userOpt.isEmpty()) return null;
+        if (userOpt.isEmpty()) return "";
 
         User user = userOpt.get();
         return tokenProvider.createToken(user.getName(), user.getRole());

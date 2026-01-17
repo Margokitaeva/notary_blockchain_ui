@@ -30,6 +30,24 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
+    public TransactionEntity getTransactionById(String id) {
+
+        return jdbc.query(
+                """
+                         SELECT tx_key,
+                         timestamp,
+                         type,
+                         created_by,
+                         status,
+                         amount,
+                         target,
+                        initiator
+                FROM transactions WHERE tx_key = ? LIMIT 1
+                """,
+                this::mapRow,id).get(0);
+    }
+
+    @Override
     public void update(TransactionEntity tx) {
         int updated = jdbc.update(
                 """
@@ -228,19 +246,7 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
 
-    @Override
-    public int countByStatus(TransactionStatus status) {
-        if (status == null) {
-            return 0;
-        }
 
-        Integer cnt = jdbc.queryForObject(
-                "SELECT COUNT(1) FROM transactions WHERE status=?",
-                Integer.class,
-                status.name()
-        );
-        return cnt == null ? 0 : cnt;
-    }
 
     @Override
     public int countByStatus(TransactionStatus status, String createdByFilter, String initiatorFilter, String targetFilter, TransactionType typeFilter) {

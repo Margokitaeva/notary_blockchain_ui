@@ -26,7 +26,7 @@ private final LeaderClient leaderClient;
 
     @PostMapping("/both/addDraft")
     public ResponseEntity<String> addDraft(@RequestBody TransactionEntity tx) {
-        String txId = blockchainService.addDraft(tx);
+        String txId = blockchainService.addTransaction(tx);
 
         if (Objects.equals(props.role(), "LEADER")) {
             leaderClient.broadcastAddDraft(tx);
@@ -67,7 +67,7 @@ private final LeaderClient leaderClient;
     @PostMapping("/both/submit/{txId}")
     public ResponseEntity<Void> submit(@PathVariable String txId) {
         blockchainService.submitTransaction(txId);
-
+        System.out.println("submitted "+txId);
         if (Objects.equals(props.role(), "LEADER")) {
             leaderClient.broadcastSubmit(txId);
         }
@@ -77,6 +77,7 @@ private final LeaderClient leaderClient;
 
     @PostMapping("/replica/approve/{txId}")
     public ResponseEntity<Void> approve(@PathVariable String txId) {
+        System.out.println("approved "+txId);
         if (Objects.equals(props.role(), "REPLICA")) {
             blockchainService.approve(txId);
             return ResponseEntity.ok().build();
@@ -92,6 +93,11 @@ private final LeaderClient leaderClient;
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
+    @GetMapping("/leader/getTx/{txId}")
+    public TransactionEntity getTx(@PathVariable String txId) {
+        return blockchainService.getTransactionById(txId);
+    }
+
 
 }
 

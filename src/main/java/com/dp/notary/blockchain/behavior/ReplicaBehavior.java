@@ -4,6 +4,7 @@ package com.dp.notary.blockchain.behavior;
 import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +13,16 @@ import java.util.Objects;
 @Component
 @ConditionalOnProperty(name = "notary.role", havingValue = "REPLICA")
 public class ReplicaBehavior implements RoleBehavior {
-    private ReplicaClient replicaClient;
-    ReplicaBehavior(ReplicaClient replicaClient) {
+    private final ReplicaClient replicaClient;
+    private final BlockchainService blockchainService;
+    ReplicaBehavior(ReplicaClient replicaClient, BlockchainService blockchainService, BlockchainService blockchainService1) {
         this.replicaClient = replicaClient;
+        this.blockchainService = blockchainService1;
+    }
+
+    @PostConstruct
+    public void init() {
+        replicaClient.fetchBlocks(blockchainService.getHeight());
     }
     @Override
     public void deleteTransaction(String txId) {

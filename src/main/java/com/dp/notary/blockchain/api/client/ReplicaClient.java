@@ -23,6 +23,13 @@ public class ReplicaClient {
         this.blockchain = blockchain;
     }
 
+    public TransactionEntity getTransaction(String txId) {
+        return client.get()
+                .uri(props.leaderUrl() + "/tx/leader/getTx/"+txId)
+                .retrieve()
+                .body(TransactionEntity.class);
+    }
+
     public void addDraft(TransactionEntity tx) {
         post("/tx/both/addDraft", tx);
     }
@@ -36,23 +43,29 @@ public class ReplicaClient {
     }
 
     public void submit(String txId) {
-        post("/tx/both/changeStatus/" + txId, null);
+        post("/tx/both/submit/" + txId, "");
     }
 
     public void fetchBlocks(long fromHeight) {
-
+        System.out.println(props.leaderUrl() + "/blocks/leader/all/" + fromHeight);
         List<BlockEntity> blocks = client.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(props.leaderUrl() + "/blocks/leader/all")
-                        .queryParam("fromHeight", fromHeight)
-                        .build())
+                .uri(props.leaderUrl() + "/blocks/leader/all/" + fromHeight)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<BlockEntity>>() {});
+                .body(new ParameterizedTypeReference<>() {
+                });
 
         assert blocks != null;
         for (BlockEntity block : blocks) {
+            for (String txId : block.getTransactions()){
+                TransactionEntity tx = blockchain.getTransactionById(txId);
+                if(tx == null) {
+                    tx = getTransaction(txId);
+                    blockchain.addTransaction(tx);
+                }
+
+            }
             blockchain.addBlock(block);
-        }//TODO:валидацию блоков
+        }
     }
 
     private void post(String path, Object body) {

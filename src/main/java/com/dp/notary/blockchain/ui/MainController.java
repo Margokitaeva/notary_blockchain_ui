@@ -3,8 +3,10 @@ package com.dp.notary.blockchain.ui;
 import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
 import com.dp.notary.blockchain.owner.OwnerService;
+import com.dp.notary.blockchain.config.NotaryProperties;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -21,7 +23,6 @@ import java.util.function.Consumer;
 public class MainController {
 
 
-    private final OwnerService ownerService;
     // ===== HEADER =====
     @FXML private Label pageTitle;
     @FXML private Label userNameLabel;
@@ -40,11 +41,15 @@ public class MainController {
 
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
+    private final OwnerService ownerService;
+    
+    private final NotaryProperties props;
 
-    public MainController(BlockchainService blockchainService, SessionService sessionService, OwnerService ownerService) {
+    public MainController(BlockchainService blockchainService, SessionService sessionService, NotaryProperties props, OwnerService ownerService) {
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
         this.ownerService = ownerService;
+        this.props = props;
     }
 
     // ===== INIT =====
@@ -67,8 +72,8 @@ public class MainController {
         }
 
 
-        boolean isLeader = sessionService.validateRole(Role.LEADER);
-        boolean isReplica = sessionService.validateRole(Role.REPLICA);
+        boolean isLeader = sessionService.validateRole(Role.LEADER) && props.role().equals("LEADER");
+        boolean isReplica = sessionService.validateRole(Role.REPLICA) || props.role().equals("REPLICA");
 
         pendingBtn.setVisible(isLeader);
         pendingBtn.setManaged(isLeader);

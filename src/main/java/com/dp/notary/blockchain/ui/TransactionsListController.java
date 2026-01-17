@@ -461,7 +461,7 @@ public class TransactionsListController {
 
         List<TransactionEntity> txs = new ArrayList<>();
         if (mode == Mode.APPROVED) {
-            txs = blockchainService.getApprovedTransactions(page, PAGE_SIZE, createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            txs = blockchainService.getStatusTransactions(page, PAGE_SIZE,TransactionStatus.APPROVED, createdByFilter, initiatorFilter, targetFilter, typeFilter);
         }
         else if (mode == Mode.PENDING)
             txs = blockchainService.getStatusTransactions(page, PAGE_SIZE, resolveStatus(), createdByFilter, initiatorFilter, targetFilter, typeFilter);
@@ -479,11 +479,11 @@ public class TransactionsListController {
         String username = sessionService.getName();
         int total;
         switch (mode) {
-            case APPROVED -> total = blockchainService.totalApproved(createdByFilter, initiatorFilter, targetFilter, typeFilter);
-            case DRAFTS -> total = blockchainService.totalDraft(username, initiatorFilter, targetFilter, typeFilter);
-            case PENDING -> total = blockchainService.totalSubmitted(createdByFilter, initiatorFilter, targetFilter, typeFilter);
-            case MY_SUBMITTED -> total = blockchainService.totalSubmitted(username, initiatorFilter, targetFilter, typeFilter);
-            case DECLINED -> total = blockchainService.totalDeclined(username, initiatorFilter, targetFilter, typeFilter);
+            case APPROVED -> total = blockchainService.totalTransactions(TransactionStatus.APPROVED,createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case DRAFTS -> total = blockchainService.totalTransactions(TransactionStatus.DRAFT,username, initiatorFilter, targetFilter, typeFilter);
+            case PENDING -> total = blockchainService.totalTransactions(TransactionStatus.SUBMITTED,createdByFilter, initiatorFilter, targetFilter, typeFilter);
+            case MY_SUBMITTED -> total = blockchainService.totalTransactions(TransactionStatus.SUBMITTED,username, initiatorFilter, targetFilter, typeFilter);
+            case DECLINED -> total = blockchainService.totalTransactions(TransactionStatus.DECLINED,username, initiatorFilter, targetFilter, typeFilter);
             default -> total = 0;
         }
 

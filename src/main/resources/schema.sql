@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS blocks
     tx_json    TEXT NOT NULL
 );
 INSERT OR IGNORE INTO blocks(height,prev_hash,time_stamp,tx_json)
-VALUES (0,'','','');
+VALUES (0,'','1970-01-01T00:00:00Z','[]');
 CREATE TABLE IF NOT EXISTS users
 (
     name          TEXT NOT NULL UNIQUE PRIMARY KEY,

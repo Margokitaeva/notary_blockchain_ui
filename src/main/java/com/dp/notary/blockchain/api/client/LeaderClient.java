@@ -30,10 +30,14 @@ public class LeaderClient {
     }
 
     public void broadcastSubmit(String txId) {
-        broadcast("/tx/both/submit/" + txId, null);
+        broadcast("/tx/both/submit/" + txId, "");
     }
     public void broadcastApprove(String txId) {
-        broadcast("/tx/both/approve/" + txId, null);
+        broadcast("/tx/replica/approve/" + txId, "");
+    }
+
+    public void broadcastDecline(String txId) {
+        broadcast("/tx/replica/decline/" + txId, "");
     }
 
     public void sendBlock(BlockEntity block) {
@@ -42,24 +46,30 @@ public class LeaderClient {
 
     private void broadcast(String path, Object body) {
         for (String replica : props.replicas()) {
+            try {
             client.post()
                     .uri(replica + path).body(body).retrieve().toBodilessEntity();
+            }catch(Exception ignore) {}
                     ;
         }
     }
 
     private void broadcastDelete(String path) {
         for (String replica : props.replicas()) {
+            try {
             client.delete()
                     .uri(replica + path)
                     .retrieve().toBodilessEntity();
+            }catch(Exception ignore) {}
         }
     }
 
     private void broadcastPut(String path, Object body) {
         for (String replica : props.replicas()) {
-            client.put()
-                    .uri(replica + path).body(body).retrieve().toBodilessEntity();
+            try {
+                client.put()
+                        .uri(replica + path).body(body).retrieve().toBodilessEntity();
+            }catch(Exception ignore) {}
         }
     }
 }
