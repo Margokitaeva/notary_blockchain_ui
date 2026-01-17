@@ -1,8 +1,8 @@
 package com.dp.notary.blockchain.behavior;
 import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
-import com.dp.notary.blockchain.ui.TransactionFormController;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -31,12 +31,16 @@ public class LeaderBehavior implements RoleBehavior {
     public void approveTransaction(String txId) {
         blockchainService.approve(txId);
         leaderClient.broadcastApprove(txId);
+        BlockEntity block = blockchainService.createNextBlock();
+        if (block != null){
+            leaderClient.sendBlock(block);
+        }
     }
 
     @Override
     public void declineTransaction(String txId) {
         blockchainService.decline(txId);
-        leaderClient.broadcastApprove(txId);
+        leaderClient.broadcastDecline(txId);
     }
 
     @Override
@@ -51,7 +55,7 @@ public class LeaderBehavior implements RoleBehavior {
             blockchainService.editDraft(tx);
             leaderClient.broadcastEditDraft(tx);
         }else{
-            blockchainService.addDraft(tx);
+            blockchainService.addTransaction(tx);
             leaderClient.broadcastAddDraft(tx);
         }
     }
@@ -62,7 +66,7 @@ public class LeaderBehavior implements RoleBehavior {
             blockchainService.editDraft(tx);
             leaderClient.broadcastEditDraft(tx);
         }else{
-            blockchainService.addDraft(tx);
+            blockchainService.addTransaction(tx);
             leaderClient.broadcastAddDraft(tx);
         }
         blockchainService.submitTransaction(tx.getTxId());
@@ -70,6 +74,10 @@ public class LeaderBehavior implements RoleBehavior {
         if (isLeader) {
             blockchainService.approve(tx.getTxId());
             leaderClient.broadcastApprove(tx.getTxId());
+            BlockEntity block = blockchainService.createNextBlock();
+            if (block != null){
+                leaderClient.sendBlock(block);
+            }
         }
         return true;
     }

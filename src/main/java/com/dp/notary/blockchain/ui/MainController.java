@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.App;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionType;
+import com.dp.notary.blockchain.config.NotaryProperties;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -38,10 +39,12 @@ public class MainController {
 
     private final BlockchainService blockchainService;
     private final SessionService sessionService;
+    private final NotaryProperties props;
 
-    public MainController(BlockchainService blockchainService, SessionService sessionService) {
+    public MainController(BlockchainService blockchainService, SessionService sessionService, NotaryProperties props) {
         this.blockchainService = blockchainService;
         this.sessionService = sessionService;
+        this.props = props;
     }
 
     // ===== INIT =====
@@ -64,7 +67,7 @@ public class MainController {
         }
 
 
-        boolean isLeader = sessionService.validateRole(Role.LEADER);
+        boolean isLeader = sessionService.validateRole(Role.LEADER) && props.role().equals("LEADER");
         boolean isReplica = sessionService.validateRole(Role.REPLICA);
 
         pendingBtn.setVisible(isLeader);

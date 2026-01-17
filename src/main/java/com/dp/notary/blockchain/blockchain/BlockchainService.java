@@ -6,8 +6,6 @@ import com.dp.notary.blockchain.blockchain.persistence.TransactionStateRepositor
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class BlockchainService {
@@ -26,9 +24,15 @@ public class BlockchainService {
         this.blockProcessor = blockProcessor;
     }
 
-    public String addDraft(TransactionEntity tx) {
-//        tx.setTxId(UUID.randomUUID().toString());
-        tx.setStatus(TransactionStatus.DRAFT);
+    public TransactionEntity getTransactionById(String id) {
+        try {
+            return txRepo.getTransactionById(id);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String addTransaction(TransactionEntity tx) {
         return txRepo.insert(tx);
     }
 
@@ -36,8 +40,8 @@ public class BlockchainService {
         TransactionEntity existing = txRepo.find(tx.getTxId())
                 .orElseThrow(() -> new IllegalStateException("Transaction not found"));
 
-        if (existing.getStatus() != TransactionStatus.DRAFT) {
-            throw new IllegalStateException("Only DRAFT can be edited");
+        if (existing.getStatus() != TransactionStatus.DRAFT && existing.getStatus() != TransactionStatus.DECLINED) {
+            throw new IllegalStateException("Only DRAFT or DECLINED can be edited");
         }
 
         txRepo.update(tx);
@@ -55,7 +59,11 @@ public class BlockchainService {
     }
 
     public void submitTransaction(String txId) {
-        updateStatusStrict(txId, TransactionStatus.DRAFT, TransactionStatus.SUBMITTED);
+        try {
+            updateStatusStrict(txId, TransactionStatus.DRAFT, TransactionStatus.SUBMITTED);
+        } catch (Exception e) {
+            updateStatusStrict(txId, TransactionStatus.DECLINED, TransactionStatus.SUBMITTED);
+        }
     }
 
     public void approve(String txId) {
@@ -126,12 +134,12 @@ public class BlockchainService {
             TransactionType typeFilter
     ) {
         return txRepo.findByStatus(status,
-                    createdByFilter,
-                    initiatorFilter,
-                    targetFilter,
-                    typeFilter,
-                    from * limit,
-                    limit);
+                createdByFilter,
+                initiatorFilter,
+                targetFilter,
+                typeFilter,
+                from * limit,
+                limit);
     }
 
     public List<TransactionEntity> getApprovedTransactions(
@@ -145,20 +153,20 @@ public class BlockchainService {
         List<TransactionStatus> statuses = List.of(TransactionStatus.APPROVED, TransactionStatus.SEALED);
 
         return txRepo.findByStatuses(
-                        statuses,
-                        createdByFilter,
-                        initiatorFilter,
-                        targetFilter,
-                        typeFilter,
-                        from * limit,
-                        limit
+                statuses,
+                createdByFilter,
+                initiatorFilter,
+                targetFilter,
+                typeFilter,
+                from * limit,
+                limit
         );
     }
 
-    public void createNextBlock() {
+    public BlockEntity createNextBlock() {
         List<TransactionEntity> approvedTxs = txRepo.findByStatus(TransactionStatus.APPROVED);
 
-        if (approvedTxs.size() < 5) return;
+        if (approvedTxs.size() < 5) return null;
 
         List<TransactionEntity> txsForBlock = approvedTxs.stream()
                 .limit(5)
@@ -166,17 +174,17 @@ public class BlockchainService {
 
         BlockEntity head = blockRepo.findHead()
                 .orElseThrow(() -> new IllegalStateException("No genesis block"));
-
+        System.out.println(head.getHeight() + " " + head.getPrevHash());
         List<String> txIds = txsForBlock.stream()
                 .map(TransactionEntity::getTxId)
                 .toList();
-
+        System.out.println(head.getHeight() + " " + head.getPrevHash());
         BlockEntity next = blockProcessor.createNextBlock(txIds, head);
 
         blockRepo.append(next);
 
         txsForBlock.forEach(tx -> seal(tx.getTxId()));
-
+        return next;
     }
 
 
@@ -193,7 +201,7 @@ public class BlockchainService {
 
 
     public void addBlock(BlockEntity block) {
-
+        System.out.println(block.getHeight());
         BlockEntity head = blockRepo.findHead()
                 .orElseThrow(() -> new IllegalStateException("No genesis block"));
 
@@ -208,11 +216,11 @@ public class BlockchainService {
         );
     }
 
-    public List<BlockEntity> getBlocks(long from,int limit){
-        return blockRepo.findFromHeight(from,limit);
+    public List<BlockEntity> getBlocks(long from, int limit) {
+        return blockRepo.findFromHeight(from, limit);
     }
 
-    public long getHeight(){
+    public long getHeight() {
         return blockRepo.getHeight();
     }
 

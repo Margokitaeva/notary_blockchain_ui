@@ -1,15 +1,12 @@
 package com.dp.notary.blockchain.api.endpoint;
 
+import com.dp.notary.blockchain.api.client.ReplicaClient;
 import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,23 +15,31 @@ import java.util.List;
 public class BlockchainController {
 
     private final BlockchainService blockchain;
-
-    public BlockchainController(BlockchainService blockchain) {
+    private final ReplicaClient replicaClient;
+    public BlockchainController(BlockchainService blockchain, ReplicaClient replicaClient) {
         this.blockchain = blockchain;
+        this.replicaClient = replicaClient;
     }
 
-    @GetMapping("leader/all")
-        public List<BlockEntity> blocks(@RequestParam(name = "fromHeight", defaultValue = "0") long fromHeight) {
+    @GetMapping("/leader/all/{fromHeight}")
+        public List<BlockEntity> blocks(@PathVariable int fromHeight) {
         return blockchain.getBlocks(fromHeight,500);
     }
 
-    @PostMapping("replica/one")
+    @PostMapping("/replica/one")
     public ResponseEntity<Void> submitBlock(@RequestBody BlockEntity req) {
         try {
+            for (String txId : req.getTransactions()){
+                TransactionEntity tx = blockchain.getTransactionById(txId);
+                if(tx == null) {
+                    tx = replicaClient.getTransaction(txId);
+                    blockchain.addTransaction(tx);
+                }
+            }
             blockchain.addBlock(req);
         }catch (IllegalStateException e) {
+            System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-            //TODO: стоило бы организовать поиск восстановление цепочки
         }
         return ResponseEntity.ok().build();
     }

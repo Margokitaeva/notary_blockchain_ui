@@ -30,6 +30,24 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
     }
 
     @Override
+    public TransactionEntity getTransactionById(String id) {
+
+        return jdbc.query(
+                """
+                         SELECT tx_key,
+                         timestamp,
+                         type,
+                         created_by,
+                         status,
+                         amount,
+                         target,
+                        initiator
+                FROM transactions WHERE tx_key = ? LIMIT 1
+                """,
+                this::mapRow,id).get(0);
+    }
+
+    @Override
     public void update(TransactionEntity tx) {
         int updated = jdbc.update(
                 """

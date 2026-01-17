@@ -57,7 +57,7 @@ public class TransactionFormController {
     private final SessionService sessionService;
     private BigDecimal parsedAmount;
     private final RoleBehavior roleBehavior;
-
+    private final NotaryProperties props;
 
     // ===== MODE =====
     private FormMode mode = FormMode.CREATE;
@@ -92,6 +92,7 @@ public class TransactionFormController {
     public TransactionFormController(BlockchainService blockchainService, NotaryProperties props, SessionService sessionService, LeaderClient leaderClient, ReplicaClient replicaClient, RoleBehavior roleBehavior) {
         this.sessionService = sessionService;
         this.roleBehavior = roleBehavior;
+        this.props = props;
     }
 
     @FXML
@@ -106,6 +107,9 @@ public class TransactionFormController {
 
     public void setMode(FormMode mode) {
         this.mode = Objects.requireNonNull(mode);
+        if(mode == FormMode.CREATE) {
+            existing = null;
+        }
         applyModeUI();
     }
 
@@ -287,7 +291,8 @@ public class TransactionFormController {
             App.get().showLogin();
             return;
         }
-        submitBtn.setText(sessionService.validateRole(Role.LEADER) ? "Submit and approve" : "Submit");
+        submitBtn.setText(sessionService.validateRole(Role.LEADER)
+                && props.role().equals("LEADER") ? "Submit and approve" : "Submit");
     }
 
     private void setupTypeCombo() {

@@ -26,17 +26,19 @@ public class BlockProcessor {
 
 
     public BlockEntity createNextBlock(List<String> transactions, BlockEntity head) {
+        System.out.println(head.getHeight()+" "+head.getPrevHash());
         long nextHeight = head == null ? 0 : head.getHeight() + 1;
         String prevHash = head == null ? "" : calculateHash(head);
+        System.out.println(nextHeight+" "+prevHash);
         Instant ts = clock.instant();
         return new BlockEntity(nextHeight, prevHash, ts, transactions);
     }
     public boolean validateBlock(BlockEntity previous, BlockEntity current) {
 
         String expectedHash = calculateHash(previous);
-
-
-        return previous.equals(current.getPrevHash());
+        System.out.println(previous.getHeight() + " "+ expectedHash );
+        System.out.println(current.getHeight() + " "+ current.getPrevHash());
+        return expectedHash.equals(current.getPrevHash());
     }
     public String calculateHash(BlockEntity block) {
         try {
