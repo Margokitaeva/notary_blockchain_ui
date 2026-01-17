@@ -116,26 +116,22 @@ public class BlockchainService {
             String targetFilter,
             TransactionType typeFilter
     ) {
-        List<TransactionEntity> transactions = txRepo.findByStatus(status,
-                createdByFilter,
-                initiatorFilter,
-                targetFilter,
-                typeFilter,
-                from * limit,
-                limit);
         if (status.equals(TransactionStatus.APPROVED)) {
-            transactions.addAll(
-                    txRepo.findByStatus(TransactionStatus.SEALED,
-                            createdByFilter,
-                            initiatorFilter,
-                            targetFilter,
-                            typeFilter,
-                            from * limit,
-                            limit)
-            );
+            return txRepo.findByStatuses(List.of(TransactionStatus.APPROVED, TransactionStatus.SEALED),
+                    createdByFilter,
+                    initiatorFilter,
+                    targetFilter,
+                    typeFilter,
+                    from*limit, limit);
         }
-        return transactions;
-
+        else
+            return txRepo.findByStatus(status,
+                    createdByFilter,
+                    initiatorFilter,
+                    targetFilter,
+                    typeFilter,
+                    from * limit,
+                    limit);
     }
 
     public BlockEntity createNextBlock() {

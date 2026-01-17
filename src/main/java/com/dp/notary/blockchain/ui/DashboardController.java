@@ -7,6 +7,7 @@ import com.dp.notary.blockchain.auth.Role;
 import com.dp.notary.blockchain.auth.SessionService;
 import com.dp.notary.blockchain.behavior.RoleBehavior;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
+import com.dp.notary.blockchain.blockchain.model.TransactionStatus;
 import com.dp.notary.blockchain.config.NotaryProperties;
 import com.dp.notary.blockchain.owner.OwnerService;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -77,19 +78,19 @@ public class DashboardController {
         if (sessionService.validateRole(Role.LEADER)) {
             configureForLeader(
                     new LeaderStatsVM(
-                            blockchainService.totalApproved(null, null, null, null),
-                            blockchainService.totalSubmitted(null, null, null, null),
-                            blockchainService.totalDraft(sessionService.getName(), null, null, null)
+                            blockchainService.totalTransactions(TransactionStatus.APPROVED, null, null, null, null),
+                            blockchainService.totalTransactions(TransactionStatus.SUBMITTED, null, null, null, null),
+                            blockchainService.totalTransactions(TransactionStatus.DRAFT, sessionService.getName(), null, null, null)
                     )
             );
         } else {
             String username = sessionService.getName();
             configureForReplica(
                     new ReplicaStatsVM(
-                            blockchainService.totalApproved(username, null, null, null),
-                            blockchainService.totalSubmitted(username, null, null, null),
-                            blockchainService.totalDraft(username, null, null, null),
-                            blockchainService.totalDeclined(username, null, null, null)
+                            blockchainService.totalTransactions(TransactionStatus.APPROVED, username, null, null, null),
+                            blockchainService.totalTransactions(TransactionStatus.SUBMITTED, username, null, null, null),
+                            blockchainService.totalTransactions(TransactionStatus.DRAFT, username, null, null, null),
+                            blockchainService.totalTransactions(TransactionStatus.DECLINED, username, null, null, null)
                     )
             );
         }
