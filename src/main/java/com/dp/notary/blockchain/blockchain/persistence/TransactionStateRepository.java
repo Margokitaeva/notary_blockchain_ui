@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransactionStateRepository {
-    TransactionEntity getTransactionById(String id);
     void update(TransactionEntity tx);
     void delete(String txId);
     String insert(TransactionEntity tx);

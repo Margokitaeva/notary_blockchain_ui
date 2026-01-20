@@ -27,7 +27,7 @@ public class BlockchainService {
 
     public TransactionEntity getTransactionById(String id) {
         try {
-            return txRepo.getTransactionById(id);
+            return txRepo.find(id).orElse(null);
         } catch (Exception e) {
             return null;
         }

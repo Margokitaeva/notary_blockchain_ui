@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.lang.foreign.Linker.Option;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -27,24 +28,6 @@ public class SqliteTransactionStateRepository implements TransactionStateReposit
 
     public SqliteTransactionStateRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
-    }
-
-    @Override
-    public TransactionEntity getTransactionById(String id) {
-
-        return jdbc.query(
-                """
-                         SELECT tx_key,
-                         timestamp,
-                         type,
-                         created_by,
-                         status,
-                         amount,
-                         target,
-                        initiator
-                FROM transactions WHERE tx_key = ? LIMIT 1
-                """,
-                this::mapRow,id).get(0);
     }
 
     @Override
