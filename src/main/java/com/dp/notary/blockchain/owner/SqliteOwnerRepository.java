@@ -19,11 +19,11 @@ public class SqliteOwnerRepository implements OwnerRepository {
     }
 
     @Override
-    public OwnerEntity findById(String id) {
+    public OwnerEntity findByName(String name) {
         return jdbc.queryForObject(
                 "SELECT name_surname, shares FROM owners WHERE name_surname = ?",
                 this::mapOwner,
-                id
+                name
         );
     }
 
@@ -55,7 +55,7 @@ public class SqliteOwnerRepository implements OwnerRepository {
     }
 
     @Override
-    public List<String> findAllOwnerIds() {
+    public List<String> findAllOwnerNames() {
         return jdbc.query(
                 "SELECT name_surname FROM owners",
                 (rs, rowNum) -> rs.getString("name_surname")

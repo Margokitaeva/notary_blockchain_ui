@@ -31,8 +31,8 @@ public class OwnerService {
                 if (tx.getInitiator().equals("Company")) throw new IllegalArgumentException("Company can't be initiator in SELL transaction");
         }
         validateAmount(tx.getAmount());
-        OwnerEntity initiator = ownerRepository.findById(tx.getInitiator());
-        OwnerEntity target = ownerRepository.findById(tx.getTarget());
+        OwnerEntity initiator = ownerRepository.findByName(tx.getInitiator());
+        OwnerEntity target = ownerRepository.findByName(tx.getTarget());
         initiator.substractShares(tx.getAmount());
         target.addShares(tx.getAmount());
         ownerRepository.updateShares(initiator);
@@ -48,7 +48,7 @@ public class OwnerService {
     }
 
     public List<String> getOwnersNames() {
-        return ownerRepository.findAllOwnerIds();
+        return ownerRepository.findAllOwnerNames();
     }
 
     private void validateAmount(BigDecimal amount) {
