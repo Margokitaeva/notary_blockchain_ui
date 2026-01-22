@@ -15,9 +15,9 @@ import java.util.Objects;
 public class ReplicaBehavior implements RoleBehavior {
     private final ReplicaClient replicaClient;
     private final BlockchainService blockchainService;
-    ReplicaBehavior(ReplicaClient replicaClient, BlockchainService blockchainService, BlockchainService blockchainService1) {
+    ReplicaBehavior(ReplicaClient replicaClient, BlockchainService blockchainService) {
         this.replicaClient = replicaClient;
-        this.blockchainService = blockchainService1;
+        this.blockchainService = blockchainService;
     }
 
     @PostConstruct

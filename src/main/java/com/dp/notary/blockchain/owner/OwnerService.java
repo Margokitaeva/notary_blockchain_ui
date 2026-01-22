@@ -15,28 +15,38 @@ public class OwnerService {
         this.ownerRepository = ownerRepository;
     }
 
-    // словить exceptions где-нибудь
-    public void applyTransaction(TransactionEntity tx) {
-        switch (tx.getType()) {
-            case GRANT:
-                if (!tx.getInitiator().equals("Company")) throw new IllegalArgumentException("In GRANT transaction initiator must be Company");
-                if (tx.getTarget().equals("Company")) throw new IllegalArgumentException("Company can't be target in GRANT transaction");
-                break;
-            case TRANSFER:
-                if (tx.getInitiator().equals("Company") || tx.getTarget().equals("Company")) throw new IllegalArgumentException("Company can't take part in TRANSFER transaction");
-                if (tx.getInitiator().equals(tx.getTarget())) throw new IllegalArgumentException("Can't transfer shares to self");
-                break;
-            case SELL:
-                if (!tx.getTarget().equals("Company")) throw new IllegalArgumentException("In SELL transaction target must be Company");
-                if (tx.getInitiator().equals("Company")) throw new IllegalArgumentException("Company can't be initiator in SELL transaction");
-        }
+    public void submitTransaction(TransactionEntity tx) {
+        validateParticipants(tx);
         validateAmount(tx.getAmount());
+
+        OwnerEntity initiator = ownerRepository.findById(tx.getInitiator());
+
+        initiator.lockShares(tx.getAmount());
+        ownerRepository.updateBalances(initiator);
+    }
+
+    public void approveTransaction(TransactionEntity tx) {
+        validateParticipants(tx);
+        validateAmount(tx.getAmount());
+
         OwnerEntity initiator = ownerRepository.findById(tx.getInitiator());
         OwnerEntity target = ownerRepository.findById(tx.getTarget());
-        initiator.substractShares(tx.getAmount());
+
+        initiator.consumeLockedShares(tx.getAmount());
         target.addShares(tx.getAmount());
-        ownerRepository.updateShares(initiator);
-        ownerRepository.updateShares(target);
+
+        ownerRepository.updateBalances(initiator);
+        ownerRepository.updateBalances(target);
+    }
+
+    public void rejectTransaction(TransactionEntity tx) {
+        validateParticipants(tx);
+        validateAmount(tx.getAmount());
+
+        OwnerEntity initiator = ownerRepository.findById(tx.getInitiator());
+
+        initiator.unlockShares(tx.getAmount());
+        ownerRepository.updateBalances(initiator);
     }
 
     public List<OwnerEntity> getOwnersShares() {
@@ -54,6 +64,31 @@ public class OwnerService {
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0)
             throw new IllegalArgumentException("Amount must be positive");
+    }
+
+    private void validateParticipants(TransactionEntity tx) {
+        switch (tx.getType()) {
+            case GRANT:
+                if (!tx.getInitiator().equals("Company"))
+                    throw new IllegalArgumentException("In GRANT transaction initiator must be Company");
+                if (tx.getTarget().equals("Company"))
+                    throw new IllegalArgumentException("Company can't be target in GRANT transaction");
+                break;
+
+            case TRANSFER:
+                if (tx.getInitiator().equals("Company") || tx.getTarget().equals("Company"))
+                    throw new IllegalArgumentException("Company can't take part in TRANSFER transaction");
+                if (tx.getInitiator().equals(tx.getTarget()))
+                    throw new IllegalArgumentException("Can't transfer shares to self");
+                break;
+
+            case SELL:
+                if (!tx.getTarget().equals("Company"))
+                    throw new IllegalArgumentException("In SELL transaction target must be Company");
+                if (tx.getInitiator().equals("Company"))
+                    throw new IllegalArgumentException("Company can't be initiator in SELL transaction");
+                break;
+        }
     }
 
 

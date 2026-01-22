@@ -21,17 +21,18 @@ public class SqliteOwnerRepository implements OwnerRepository {
     @Override
     public OwnerEntity findById(String id) {
         return jdbc.queryForObject(
-                "SELECT name_surname, shares FROM owners WHERE name_surname = ?",
+                "SELECT name_surname, shares, locked_shares FROM owners WHERE name_surname = ?",
                 this::mapOwner,
                 id
         );
     }
 
     @Override
-    public void updateShares(OwnerEntity owner) {
+    public void updateBalances(OwnerEntity owner) {
         jdbc.update(
-                "UPDATE owners SET shares = ? WHERE name_surname = ?",
+                "UPDATE owners SET shares = ?, locked_shares = ? WHERE name_surname = ?",
                 owner.getShares().toPlainString(),
+                owner.getLockedShares().toPlainString(),
                 owner.getName_surname()
         );
     }
@@ -39,7 +40,7 @@ public class SqliteOwnerRepository implements OwnerRepository {
     @Override
     public List<OwnerEntity> findAll() {
         return jdbc.query(
-                "SELECT name_surname, shares FROM owners",
+                "SELECT name_surname, shares, locked_shares FROM owners",
                 this::mapOwner
         );
     }
@@ -47,7 +48,7 @@ public class SqliteOwnerRepository implements OwnerRepository {
     @Override
     public List<OwnerEntity> findAll(String filter) {
         return jdbc.query(
-                "SELECT name_surname, shares FROM owners WHERE ? is NULL OR name_surname LIKE ?",
+                "SELECT name_surname, shares, locked_shares FROM owners WHERE ? is NULL OR name_surname LIKE ?",
                 this::mapOwner,
                 filter,
                 "%" + filter + "%"
@@ -65,7 +66,8 @@ public class SqliteOwnerRepository implements OwnerRepository {
     private OwnerEntity mapOwner(ResultSet rs, int rowNum) throws SQLException {
         return new OwnerEntity(
                 rs.getString("name_surname"),
-                new BigDecimal(rs.getString("shares"))
+                new BigDecimal(rs.getString("shares")),
+                new BigDecimal(rs.getString("locked_shares"))
         );
     }
 

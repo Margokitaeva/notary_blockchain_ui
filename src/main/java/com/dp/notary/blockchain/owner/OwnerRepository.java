@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface OwnerRepository {
     OwnerEntity findById(String id);
-    void updateShares(OwnerEntity owner);
+    void updateBalances(OwnerEntity owner);
 
     List<OwnerEntity> findAll();
     List<OwnerEntity> findAll(String filter);
