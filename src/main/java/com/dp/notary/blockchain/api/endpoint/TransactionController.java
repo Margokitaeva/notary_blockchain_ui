@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.api.client.LeaderClient;
 import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.config.NotaryProperties;
+import com.dp.notary.blockchain.notary.TransactionOrchestrator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +17,15 @@ public class TransactionController {
 
     private final BlockchainService blockchainService;
     private final NotaryProperties props;
-private final LeaderClient leaderClient;
-    public TransactionController(BlockchainService blockchainService, NotaryProperties props, LeaderClient leaderClient) {
+    private final LeaderClient leaderClient;
+    private final TransactionOrchestrator orchestrator;
+
+    public TransactionController(BlockchainService blockchainService,
+                                 NotaryProperties props, LeaderClient leaderClient, TransactionOrchestrator orchestrator) {
         this.blockchainService = blockchainService;
         this.props = props;
         this.leaderClient = leaderClient;
+        this.orchestrator = orchestrator;
     }
 
 
@@ -66,7 +71,7 @@ private final LeaderClient leaderClient;
 
     @PostMapping("/both/submit/{txId}")
     public ResponseEntity<Void> submit(@PathVariable String txId) {
-        blockchainService.submitTransaction(txId);
+        orchestrator.submit(txId);
         System.out.println("submitted "+txId);
         if (Objects.equals(props.role(), "LEADER")) {
             leaderClient.broadcastSubmit(txId);
@@ -79,7 +84,7 @@ private final LeaderClient leaderClient;
     public ResponseEntity<Void> approve(@PathVariable String txId) {
         System.out.println("approved "+txId);
         if (Objects.equals(props.role(), "REPLICA")) {
-            blockchainService.approve(txId);
+            orchestrator.approve(txId);
             return ResponseEntity.ok().build();
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -88,7 +93,7 @@ private final LeaderClient leaderClient;
     @PostMapping("/replica/decline/{txId}")
     public ResponseEntity<Void> decline(@PathVariable String txId) {
         if (Objects.equals(props.role(), "REPLICA")) {
-            blockchainService.decline(txId);
+            orchestrator.decline(txId);
             return ResponseEntity.ok().build();
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

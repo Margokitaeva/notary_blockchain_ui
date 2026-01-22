@@ -4,6 +4,7 @@ import com.dp.notary.blockchain.blockchain.BlockchainService;
 import com.dp.notary.blockchain.blockchain.model.BlockEntity;
 import com.dp.notary.blockchain.blockchain.model.TransactionEntity;
 import com.dp.notary.blockchain.config.NotaryProperties;
+import com.dp.notary.blockchain.notary.TransactionOrchestrator;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;

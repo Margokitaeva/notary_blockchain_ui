@@ -5,8 +5,8 @@ import com.dp.notary.blockchain.blockchain.model.OwnerEntity;
 import java.util.List;
 
 public interface OwnerRepository {
-    OwnerEntity findByName(String name);
-    void updateShares(OwnerEntity owner);
+    OwnerEntity findById(String id);
+    void updateBalances(OwnerEntity owner);
 
     List<OwnerEntity> findAll();
     List<OwnerEntity> findAll(String filter);
