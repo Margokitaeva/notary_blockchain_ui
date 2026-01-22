@@ -1,8 +1,8 @@
 server:
-  port: 8081
+  port: 8080
 
 notary:
-  role: REPLICA
+  role: LEADER
   leaderUrl: http://localhost:8080
   replicas:
     - http://localhost:8081

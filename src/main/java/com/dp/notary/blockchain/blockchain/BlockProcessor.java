@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Iterator;
 
 @Component
 public class BlockProcessor {
@@ -58,5 +59,32 @@ public class BlockProcessor {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 not available", e);
         }
+    }
+
+    public boolean validateChain(Iterator<BlockEntity> iterator) {
+        if (!iterator.hasNext()) {
+            return true;
+        }
+
+        BlockEntity previous = iterator.next();
+
+        while (iterator.hasNext()) {
+            BlockEntity current = iterator.next();
+
+            if (!validateBlock(previous, current)) {
+                return false;
+            }
+            if (current.getHeight() != previous.getHeight() + 1) {
+                return false;
+            }
+
+            previous = current;
+        }
+
+        return true;
+    }
+
+    public boolean validateChain(Iterable<BlockEntity> chain) {
+        return validateChain(chain.iterator());
     }
 }

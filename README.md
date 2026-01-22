@@ -1,10 +1,10 @@
 # notary_blockchain_ui
 
-TO DO:
+## TODO:
 - [ ] сделать проверки успешности операций
 - [ ] сделать пост для возврата id когда реплика создает черновик (onSaveDraft, onSubmit in TransactionFormController)
 
-UI:
+### UI:
 - [x] сделать выпадающий список с поиском для initiator and target
 - [x] подключить получение owners and their shares in Dashboard
 - [x] удалить фильтр created by для соответствующих вкладок
@@ -15,7 +15,7 @@ UI:
 - [ ] сделать фильтрацию в combobox для owners
 - [ ] словить ошибку того, что денег недостаточно
 
-Final:
+### Final:
 - [ ] написать документацию
 - [ ] сделать норм библиотеку
 - [ ] подключить обслуживание транзакций
@@ -24,7 +24,8 @@ Final:
  заблокированных środków и те, которые должны прийти
 
 
-Done:
+### Done:
+- [x] функция для проверки цепи блоков при помощи итератора в blockchain/BlockProcessor
 - [x] сделать нормальное запрашивание транзакций в TransactionsListController (не по блокам)
 - [x] перенести результат действия кнопок из MainController в TransactionsListController
 - [x] переделать чтобы во фронте amount мог быть double
@@ -38,3 +39,13 @@ Done:
 - [x] проверить что везде правильные проверки ролей (нода - пользователь)
 - [x] пофиксить чтобы amount отображалось
 - [x] Добавить подтягивание потерянных транзакций при создании блока.
+
+## How to run:
+Use Java17 (jdk-17.0.2 works fine for me) 
+```bash
+# IntelliJ IDEA: "file" -> "settings" -> (type in search field) -> "enable annotation processing" -> On
+# only then:
+
+mvn clean install
+mvn javafx:run
+```
