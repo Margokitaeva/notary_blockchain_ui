@@ -11,7 +11,7 @@ notary:
 tokens:
   TokenKey: fgsipvfhasrjfshefphasipuefhipuashfiuhaseifhasieuhfiusehfpiahseifhiasuehfipuashefiphaseifhiasehfiuasehfiahsefpihaseipfhasepifhasipuehf
   ValideTime: 600000
-  leaderUserName: chuila
+  leaderUserName: mister
 ui:
   pageSize: 15
   txPerBlock: 5
