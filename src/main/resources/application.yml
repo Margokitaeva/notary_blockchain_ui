@@ -18,6 +18,7 @@ ui:
 
 spring:
   datasource:
+#    url: jdbc:sqlite:./notary.db
     url: jdbc:sqlite:./replica.db
     driver-class-name: org.sqlite.JDBC
 

@@ -246,11 +246,42 @@ public class TransactionFormController {
                     getInitiatorValue()
             );
 
+            try {
+                boolean approveImmediately = roleBehavior.onSubmitDraft(tx,mode.toString(), sessionService.validateRole(Role.LEADER));
+                actions.onSubmit(approveImmediately);
+            } catch (Exception e) {
+                showBusinessError(e);
+            }
 
-            boolean approveImmediately = roleBehavior.onSubmitDraft(tx,mode.toString(), sessionService.validateRole(Role.LEADER));
-
-            actions.onSubmit(approveImmediately);
         }
+    }
+    private void showBusinessError(Exception e) {
+
+        String msg = e.getMessage();
+        if (msg == null) msg = "";
+        msg = cleanExceptionPrefix(msg);
+
+        if (msg.isBlank()) msg = "Unknown error";
+        error(msg); // твой метод, который пишет в errorLabel
+    }
+
+    private String cleanExceptionPrefix(String msg) {
+        // Пример входа:
+        // "IllegalArgumentException: Not enough shares"
+        // "java.lang.IllegalArgumentException: Not enough shares"
+        // "Not enough shares" (оставим как есть)
+        if(msg.contains("400")){
+            return  msg.substring(msg.indexOf('"') + 1, msg.lastIndexOf('"'));
+        }
+        int idx = msg.indexOf(':');
+        if (idx >= 0) {
+            String left = msg.substring(0, idx).trim();
+            // если слева похоже на имя исключения / класс (есть Exception или точка пакета) — режем
+            if (left.contains("Exception") || left.contains(".")) {
+                return msg.substring(idx + 1).trim();
+            }
+        }
+        return msg.trim();
     }
 
     // ================= PAYLOAD + VALIDATION =================

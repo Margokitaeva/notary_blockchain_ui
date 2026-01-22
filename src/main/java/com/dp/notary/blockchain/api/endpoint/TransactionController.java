@@ -70,8 +70,12 @@ public class TransactionController {
 
 
     @PostMapping("/both/submit/{txId}")
-    public ResponseEntity<Void> submit(@PathVariable String txId) {
-        orchestrator.submit(txId);
+    public ResponseEntity<String> submit(@PathVariable String txId) {
+        try {
+            orchestrator.submit(txId);
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        }
         System.out.println("submitted "+txId);
         if (Objects.equals(props.role(), "LEADER")) {
             leaderClient.broadcastSubmit(txId);
